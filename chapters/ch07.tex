@@ -122,9 +122,9 @@ $s$ 为齐次尺度。两个视图（两台相机，或相机与投影仪）各�
 
 \subsection{推导：相机射线与投影光平面求交}
 
-结构光常用「相机 + 投影仪」而非两台相机。相位确定投影仪的一列，即空间中一张光平面 $\boldsymbol n^\top\boldsymbol X=d_\Pi$（在相机坐标系中表示，$\boldsymbol n$ 与平面常数 $d_\Pi$ 由标定给出）。相机像素的归一化射线 $\boldsymbol X=\tau\,\tilde{\boldsymbol x}$（$\tau$ 为射线参数），$\tilde{\boldsymbol x}=(x,y,1)^\top$。代入平面方程：
+结构光常用「相机 + 投影仪」而非两台相机。相位确定投影仪的一列，即空间中一张光平面 $\boldsymbol n^\top\boldsymbol X=\rho_\Pi$（在相机坐标系中表示，$\boldsymbol n$ 与平面常数 $\rho_\Pi$ 由标定给出）。相机像素的归一化射线 $\boldsymbol X=Z\,\tilde{\boldsymbol x}$，$\tilde{\boldsymbol x}=(x,y,1)^\top$。代入平面方程：
 \[
-  \tau=\frac{d_\Pi}{\boldsymbol n^\top\tilde{\boldsymbol x}},\qquad Z=\tau .
+  Z=\frac{\rho_\Pi}{\boldsymbol n^\top\tilde{\boldsymbol x}} .
 \]
 每像素只需一次点积与一次除法，适合 GPU 逐像素计算。条件性：当 $\boldsymbol n^\top\tilde{\boldsymbol x}\to0$，射线几乎平行于光平面，$Z$ 对相位与标定误差极端敏感——这正是交会角过小的情形。对平面法向的小误差 $\delta\boldsymbol n$，
 \[
@@ -209,7 +209,7 @@ $s$ 为齐次尺度。两个视图（两台相机，或相机与投影仪）各�
   \item \textbf{（计算）} 光平面法向与相机射线夹角为 $80^\circ$（即 $\boldsymbol n^\top\tilde{\boldsymbol x}/|\tilde{\boldsymbol x}|=\cos80^\circ$）。若法向在射线方向的分量误差为 $10^{-3}$，求相对深度误差，并与夹角 $45^\circ$ 时比较。
   \item \textbf{（口扫场景）} 正文预算表中，若伽马残余改用三步（$0.23\,\mathrm{rad}$），预算主导项会变成什么？要让伽马项小于光子噪声项，三步方案需要把伽马残余压到多少（按 $\Gamma\approx1.1$ 时 $0.022\,\mathrm{rad}$ 线性插值估计）？
   \item \textbf{（医学重建）} 用于体表的大视场结构光，$Z=500\,\mathrm{mm}$，$f_xB=2.5\times10^5\,\mathrm{mm}\cdot$像素，$\delta d=0.1$ 像素。求一阶 $\delta Z$；若焦距标定误差仍为 $0.1\%$，尺度误差是多少？哪一项主导？
-  \item \textbf{（C++/CUDA 实践）} 写出射线—光平面求交的核函数伪代码，包括无效像素判定，并说明 $\boldsymbol n$、$d_\Pi$ 如何随投影仪列（相位）变化而查表或插值。
+  \item \textbf{（C++/CUDA 实践）} 写出射线—光平面求交的核函数伪代码，包括无效像素判定，并说明 $\boldsymbol n$、$\rho_\Pi$ 如何随投影仪列（相位）变化而查表或插值。
 \end{enumerate}
 
 \section{习题讲解}
@@ -227,5 +227,5 @@ $s$ 为齐次尺度。两个视图（两台相机，或相机与投影仪）各�
   \item 相对误差 $\approx10^{-3}/\cos80^\circ=10^{-3}/0.174\approx0.58\%$；$45^\circ$ 时 $10^{-3}/0.707\approx0.14\%$。掠射时约放大 $4$ 倍。
   \item 三步伽马误差 $0.23\,\mathrm{rad}$ 对应约 $11\,\mu\mathrm{m}$，与焦距标定项（$15\,\mu\mathrm{m}$）同量级，成为第二大项，远超随机噪声。要低于 $0.020\,\mathrm{rad}$，大致需要残余伽马接近 $1.1$ 甚至更小（$\Gamma=1.1$ 时 $0.022\,\mathrm{rad}$，刚好相当）；即残余非线性需校正到百分之几以内。
   \item $\delta Z=500^2\times0.1/(2.5\times10^5)=0.1\,\mathrm{mm}$；尺度误差 $0.1\%\times500=0.5\,\mathrm{mm}$，尺度误差主导。大视场下标定的相对精度比亚像素匹配更关键。
-  \item 每线程一像素：读相位 $\varphi$ 与调制度 $M$；$M$ 低于门限则输出无效；由 $\varphi$ 计算投影仪列坐标 $u_p$；按 $u_p$ 在预计算表中线性插值得到 $(\boldsymbol n,d_\Pi)$（表在标定后对每个投影仪列算好，放纹理或常量内存）；计算点积 $q_\Pi=\boldsymbol n^\top\tilde{\boldsymbol x}$（$\tilde{\boldsymbol x}$ 可预存为去畸变查找表），若 $|q_\Pi|<q_{\min}$ 输出无效，否则 $Z=d_\Pi/q_\Pi$。光平面随列连续变化，相邻列间线性插值的误差远小于标定误差。
+  \item 每线程一像素：读相位 $\varphi$ 与调制度 $M$；$M$ 低于门限则输出无效；由 $\varphi$ 计算投影仪列坐标 $u_p$；按 $u_p$ 在预计算表中线性插值得到 $(\boldsymbol n,\rho_\Pi)$（表在标定后对每个投影仪列算好，放纹理或常量内存）；计算点积 $q_\Pi=\boldsymbol n^\top\tilde{\boldsymbol x}$（$\tilde{\boldsymbol x}$ 可预存为去畸变查找表），若 $|q_\Pi|<q_{\min}$ 输出无效，否则 $Z=\rho_\Pi/q_\Pi$。光平面随列连续变化，相邻列间线性插值的误差远小于标定误差。
 \end{enumerate}

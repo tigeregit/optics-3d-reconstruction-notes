@@ -48,8 +48,8 @@
 | \(N_{F,w}\) | 像方工作 F 数 \(N_F(1+\lvert m\rvert)\)；衍射截止、散斑、Airy 用此量 | 勿与 \(N_F\) 混写 |
 | \(\Gamma\) | 投影/显示伽马指数（ch06/ch07/ch10） | 勿用 \(\gamma\)（仅相干度） |
 | \(c_x,\,c_y\) | 主点（像素，ch00 起） | 与弥散圆/光速 \(c\) 以下标区分 |
-| \(d_\Pi\) | 光平面常数 \(\boldsymbol n^\top\boldsymbol X=d_\Pi\)（ch07） | 勿用 \(h\)（PSF） |
-| \(\tau\) | 射线参数 \(\boldsymbol X=\tau\tilde{\boldsymbol x}\)（ch07） | 勿用 \(t\)（平移） |
+| \(\rho_\Pi\) | 光平面常数 \(\boldsymbol n^\top\boldsymbol X=\rho_\Pi\)（ch07） | 勿用 \(h\)（PSF）、\(d\)（视差） |
+| \(\tau\) | 曝光时间（ch03/ch05） | 勿作他用 |
 | \(q_\Pi\) | 点积 \(\boldsymbol n^\top\tilde{\boldsymbol x}\)（ch07） | 勿用 \(s\)（齐次尺度） |
 | \(t_w\) | 窗片厚度（ch01） | 勿用裸 \(t\) |
 | \(I_s,\,I_d\) | 镜面/漫射分量强度（ch04） | — |
