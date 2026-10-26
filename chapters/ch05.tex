@@ -39,9 +39,9 @@
 
 \subsection{相机响应：从 $E$ 到数字灰度}
 
-传感器在曝光时间 $\tau$ 内积分光子，经量子效率变成电子，再经增益、偏置、非线性与量化得到数字数（DN，灰度）。可粗写
+传感器在曝光时间 $\tau$ 内积分光子，经量子效率 $\eta_{\mathrm{QE}}$（每个入射光子产生光电子的概率，随波长变化）变成电子，再经增益、偏置、非线性与量化得到数字数（DN，灰度）。可粗写
 \begin{equation}
-  \mathrm{DN} = g\bigl(\eta\,E_{\mathrm{img}}\,\tau + n_{\mathrm{dark}}\bigr) + n_{\mathrm{read}} + \cdots,
+  \mathrm{DN} = g\bigl(\eta_{\mathrm{QE}}\,E_{\mathrm{img}}\,\tau + n_{\mathrm{dark}}\bigr) + n_{\mathrm{read}} + \cdots,
   \label{eq:ch05-response}
 \end{equation}
 $g$ 含模拟增益与 ADC，$n_{\mathrm{dark}}$ 暗电流贡献，$n_{\mathrm{read}}$ 读出噪声。还有 gamma、色调映射、自动白平衡等会破坏线性。因此：
