@@ -98,6 +98,50 @@ PTF 的非零部分（彗差等非对称像差造成）对结构光尤其危险�
 在深度不连续的边缘（牙齿轮廓、器械边缘），一个像元的 $\PSF$ 覆盖区域同时包含前景与背景。由于前后景的条纹相位不同，像元接收到的是两个复相量 $M_1e^{i\varphi_1}$ 与 $M_2e^{i\varphi_2}$ 按面积与亮度加权之和，求出的相位介于两者之间（甚至因相量抵消而 $M$ 很小），重建出漂浮在前后景之间的「飞点」。
 高曲率表面虽然连续，但 $\PSF$ 覆盖区域内相位非线性变化，同样产生偏置，表现为尖锐边缘被「磨圆」、窄槽被「填浅」。$\PSF$ 越宽（离焦、低 $\MTF$），受影响的带宽越大。诊断特征：调制幅 $M$ 在边缘处骤降；相位梯度异常大。
 
+\subsection{例：离焦怎样一步步吃掉调制度}
+
+把模糊换算成调制度损失，就能直接接到第~\ref{ch:06}~章的相位噪声上。几何光学下，离焦 $\Delta z$ 在物方形成直径约
+\[
+  b\approx2\,\mathrm{NA}_o\,|\Delta z|
+\]
+的均匀圆斑（$\mathrm{NA}_o$ 为物方数值孔径；适用于离焦斑远大于衍射斑时）。均匀圆斑的 $\MTF$ 为
+\[
+  \MTF_{\mathrm{def}}(\xi)=\left|\frac{2J_1(\pi b\xi)}{\pi b\xi}\right|,
+\]
+小自变量时 $\approx1-(\pi b\xi)^2/8$。级联到式~\eqref{eq:ch08-cascade} 中，相机所见调制度 $V\approx V_0\cdot\MTF_{\mathrm{tot}}(\xi)$，相位噪声随 $1/V$ 增长。
+
+\textbf{数量级示意。} 物方 $\mathrm{NA}_o=0.03$，条纹物方周期 $0.2\,\mathrm{mm}$（$\xi=5$ 周/mm）：
+\begin{center}
+\small
+\begin{tabular}{cccc}
+  \hline
+  $|\Delta z|$ & $b$ & $\MTF_{\mathrm{def}}$ & $\sigma_\varphi$ 相对焦面\\
+  \hline
+  $0.5\,\mathrm{mm}$ & $30\,\mu\mathrm{m}$ & $0.97$ & $\times1.03$\\
+  $1\,\mathrm{mm}$ & $60\,\mu\mathrm{m}$ & $0.89$ & $\times1.1$\\
+  $2\,\mathrm{mm}$ & $120\,\mu\mathrm{m}$ & $0.62$ & $\times1.6$\\
+  $3\,\mathrm{mm}$ & $180\,\mu\mathrm{m}$ & $0.28$ & $\times3.5$\\
+  \hline
+\end{tabular}
+\end{center}
+（$\pi b\xi=3.83$ 即 $b=244\,\mu\mathrm{m}$ 时 $\MTF$ 第一次降到零，条纹完全消失，之后出现反相的伪调制。）这里只算了相机侧离焦；投影侧同样离焦，两者相乘，实际下降更快。表中 $\Delta z=2\,\mathrm{mm}$ 一行与第~\ref{ch:01}~章算出的景深量级相当：景深边缘不是「清晰与模糊」的分界，而是相位噪声开始成倍增长的位置。
+
+\subsection{例：混合像素的相量算一遍}
+
+边缘像素中，前景面积占比 $\alpha$，前景与背景调制幅 $M_1$、$M_2$，相位差 $\Delta\varphi$。像素所得相量
+\[
+  \tilde M e^{i\tilde\varphi}=\alpha M_1e^{i\varphi_1}+(1-\alpha)M_2e^{i\varphi_2}.
+\]
+取 $\varphi_1=0$、$\alpha=0.5$、$M_1=3M_2$、$\Delta\varphi=1\,\mathrm{rad}$：
+\[
+  \tilde\varphi=\operatorname{atan2}\bigl(\sin1,\ 3+\cos1\bigr)=\operatorname{atan2}(0.841,\,3.540)\approx0.233\,\mathrm{rad}.
+\]
+面积各占一半，相位却只偏向背景 $0.233$ 而不是 $0.5\,\mathrm{rad}$：亮的一方「拉」住了相位。合成幅值 $\tilde M=0.5\times3.638M_2\approx1.82M_2$，比两者平均 $2M_2$ 低约 $9\%$，变化不大，因而单靠 $M$ 门限难以发现这种像素。若 $M_1=M_2$、$\Delta\varphi=\pi$，相量完全抵消，$\tilde M\to0$，此时 $M$ 门限能剔除它。所以混合像素有两种：抵消型（$M$ 骤降，易剔除）与偏置型（$M$ 基本正常，相位偏到一侧，需要用深度不连续检测或相位梯度判据）。
+
+\subsection{去卷积能救回多少}
+
+既然模糊是卷积（式~\eqref{eq:ch08-conv}），能否除以光学传递函数 复原？对结构光，关心的只是条纹基频 $\xi_0$ 处的幅度：除以 $\MTF(\xi_0)$ 能把 $M$ 恢复，但噪声同样被放大 $1/\MTF(\xi_0)$ 倍，$\SNR$ 不变，相位噪声也就不变。去卷积无法凭空恢复信噪比，它只在两种情况下有用：(i) 模糊在空间上变化（例如混合像素附近），复原能改善几何偏置；(ii) 需要的是图像外观而不是相位。对相位而言，真正的出口是让 $\MTF(\xi_0)$ 本身变大：选更长的条纹周期、更大的景深或对焦更准。
+
 \section{限度}
 \label{sec:ch08-limits}
 
@@ -132,6 +176,11 @@ PTF 的非零部分（彗差等非对称像差造成）对结构光尤其危险�
   \item \textbf{（重建场景）} 换用另一颜色的投影光源后，未重新标定，平面重建出现轻微碗形。解释并给出对策。
   \item \textbf{（设计）} 由式~\eqref{eq:ch08-tradeoff}，若 $\MTF_{\mathrm{link}}(\xi)\approx1-\xi/\xi_0$（线性近似），求使 $\delta Z$ 最小的 $\xi$。
   \item \textbf{（诊断）} 相位误差图在某些区域条纹相位整体反转了约 $\pi$，而调制幅很低。可能是离焦 $\MTF$ 的什么现象？
+  \item \textbf{（推导）} 由均匀圆斑的 $\MTF$ 小自变量展开，求 $\MTF_{\mathrm{def}}$ 降到 $0.9$ 时 $b\xi$ 的值，并给出对应的离焦量公式。
+  \item \textbf{（计算）} 正文表中若条纹周期加长到 $0.4\,\mathrm{mm}$，$\Delta z=2\,\mathrm{mm}$ 时 $\MTF_{\mathrm{def}}$ 约为多少？代价是什么（结合第~\ref{ch:06}~章 $\delta d=P\sigma_\varphi/2\pi$）？
+  \item \textbf{（口扫场景）} 牙齿邻接面边缘，前景牙面 $M_1=M_2$，$\alpha=0.3$，$\Delta\varphi=2\,\mathrm{rad}$。求合成相位与幅值；按 $P=16$ 像素换算为多少像素的投影坐标偏差？
+  \item \textbf{（医学重建）} 内镜结构光中组织表面有一层液膜，使边缘出现强镜面高光（$M_1=10M_2$）。在 $\alpha$ 只有 $0.1$ 时，相位偏向高光一侧多少（$\Delta\varphi=1\,\mathrm{rad}$）？说明这对边缘几何的影响。
+  \item \textbf{（C++/CUDA 实践）} 设计一个检测偏置型混合像素的 GPU 后处理：给出所用判据（相位梯度、深度跳变、$M$ 局部比值），以及邻域访问如何用共享内存实现。
 \end{enumerate}
 
 \section{习题讲解}
@@ -145,4 +194,9 @@ PTF 的非零部分（彗差等非对称像差造成）对结构光尤其危险�
   \item 轴向与垂轴色差：焦距与畸变系数随波长变化，标定参数不再匹配，残余畸变表现为碗形。对策：以工作波长重新标定，或使用色差校正的镜头。
   \item $\xi\,\MTF=\xi-\xi^2/\xi_0$ 在 $\xi=\xi_0/2$ 时取最大，此时 $\delta Z$ 最小。
   \item 离焦 $\MTF$ 过零后的负值区：对比度反转，相位翻转 $\pi$，同时幅值小。说明该区域严重离焦，应降低条纹频率或剔除。
+  \item $1-x^2/8=0.9$ 得 $x=\pi b\xi\approx0.894$，$b\xi\approx0.285$；由 $b=2\mathrm{NA}_o|\Delta z|$，$|\Delta z|\approx0.142/(\mathrm{NA}_o\xi)$。$\mathrm{NA}_o=0.03$、$\xi=5$ 时约 $0.95\,\mathrm{mm}$，与表中 $1\,\mathrm{mm}$ 一行一致。
+  \item $\xi=2.5$，$\pi b\xi=0.942$，$\MTF\approx1-0.111=0.89$（准确值约 $0.89$）。代价：$P$ 加倍，同样 $\sigma_\varphi$ 下 $\delta d$ 加倍；景深边缘处相位噪声减为约 $0.62/0.89$，综合后约 $2\times0.70=1.4$ 倍，焦面处则直接是 $2$ 倍。周期选择是景深与焦面精度的权衡。
+  \item 相量 $0.3+0.7e^{2i}=0.3+0.7(-0.416+0.909i)=0.009+0.636i$，$\tilde\varphi\approx1.56\,\mathrm{rad}$，$\tilde M\approx0.64M_1$。相对前景偏 $1.56\,\mathrm{rad}$，约 $16\times1.56/6.28\approx4$ 像素。面积只占七成的背景主导了相位。
+  \item $0.1\times10+0.9e^{i}=1+0.486+0.757i$，$\tilde\varphi=\operatorname{atan2}(0.757,1.486)\approx0.47\,\mathrm{rad}$。背景相位为 $1\,\mathrm{rad}$，合成相位被拉向高光约 $0.53\,\mathrm{rad}$：只占一成面积的高光把相位拉过了一半。边缘轮廓会向高光一侧「外扩」，表现为组织边缘鼓起。
+  \item 判据：$|\nabla\varphi|$ 超过正常条纹梯度的若干倍；相邻深度跳变大于预设阈值；像素 $M$ 与邻域中位数之比偏离（抵消型低于 $0.5$）。实现：每个线程块把 $(16+2)\times(16+2)$ 的相位与 $M$ 瓦片载入共享内存（含一像素边框），同步后每线程计算梯度与邻域统计，标记可疑像素；被标记像素可剔除或在深度跳变两侧按最近侧填补。
 \end{enumerate}
