@@ -1,0 +1,52 @@
+% preamble.tex — tectonic + ctexbook + Noto CJK
+% documentclass already loads ctex; configure fonts and packages here.
+\setCJKmainfont{Noto Serif CJK SC}[
+  AutoFakeBold = true,
+]
+\setCJKsansfont{Noto Sans CJK SC}[
+  AutoFakeBold = true,
+]
+\setCJKmonofont{Noto Sans Mono CJK SC}
+
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!50!black,
+  citecolor=green!40!black,
+  urlcolor=blue!60!black,
+}
+
+\usepackage[round,authoryear]{natbib}
+
+\newcommand{\chapref}[1]{第~\ref{#1}~章}
+\newcommand{\secref}[1]{第~\ref{#1}~节}
+
+% Notation Lock macros (see STYLE.md)
+\newcommand{\wavelength}{\lambda}
+\newcommand{\nuopt}{\nu}           % optical frequency; never use f
+\newcommand{\focal}{f}             % focal length
+\newcommand{\refrindex}{n}
+\newcommand{\NA}{\mathrm{NA}}
+\newcommand{\intensity}{I}         % intensity; use E when confusion with irradiance
+\newcommand{\irradiance}{E}
+\newcommand{\radiance}{L}
+\newcommand{\radflux}{\Phi}
+\newcommand{\phase}{\varphi}       % or \phi
+\newcommand{\OPD}{\mathrm{OPD}}
+\newcommand{\opd}{\delta}
+\newcommand{\PSF}{\mathrm{PSF}}
+\newcommand{\psf}{h}
+\newcommand{\MTF}{\mathrm{MTF}}
+\newcommand{\imgcoord}{(u,v)}
+\newcommand{\worldcoord}{(X,Y,Z)}
+\newcommand{\camK}{K}
+\newcommand{\camR}{R}
+\newcommand{\camt}{t}
+\newcommand{\Zd}{Z_d}              % depth-of-field related; not bare Z
+\newcommand{\SNR}{\mathrm{SNR}}
+
+\graphicspath{{figures/}}
