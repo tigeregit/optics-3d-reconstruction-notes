@@ -45,7 +45,7 @@ def fig_mtf_curve():
     ax.set_title("条纹周期选择：存在最优区间", fontsize=11); ax.grid(alpha=0.3)
     h1, l1 = ax.get_legend_handles_labels(); h2, l2 = ax2.get_legend_handles_labels()
     ax.legend(h1 + h2, l1 + l2, fontsize=8, loc="upper center")
-    fig.text(0.5, 0.005, NOTE, ha="center", fontsize=7, color="#888")
+    fig.text(0.5, 0.005, NOTE, ha="center", fontsize=10, color="#888")
     fig.tight_layout(rect=[0, 0.04, 1, 1])
     fig.savefig(OUT / "fig-mtf-curve.pdf", bbox_inches="tight"); plt.close(fig)
 
@@ -72,43 +72,43 @@ def fig_sensor_compare():
                         ha="center", va="center",
                         arrowprops=dict(arrowstyle="-", color=c, lw=1.0))
         else:
-            ax.text(cx, cy, name, ha="center", va="center", fontsize=11, color=c)
+            ax.text(cx, cy, name, ha="center", va="center", fontsize=13, color=c)
     ax.set_xscale("log"); ax.set_yscale("log")
     ax.set_xlim(5e-4, 3e4); ax.set_ylim(5e-4, 1e2)
     ax.set_xlabel("深度量程 / 工作范围（mm）"); ax.set_ylabel("深度分辨率（mm）")
     ax.set_title("深度传感方式：分辨率 vs 量程（数量级示意）", fontsize=11)
     ax.grid(alpha=0.3, which="both")
-    fig.text(0.5, 0.005, NOTE, ha="center", fontsize=7, color="#888")
+    fig.text(0.5, 0.005, NOTE, ha="center", fontsize=10, color="#888")
     fig.tight_layout(rect=[0, 0.04, 1, 1])
     fig.savefig(OUT / "fig-sensor-compare.pdf", bbox_inches="tight"); plt.close(fig)
 
 
 def fig_error_budget_map():
-    fig, ax = plt.subplots(figsize=(12, 5.6))
-    ax.set_xlim(0, 14); ax.set_ylim(0, 6); ax.axis("off")
+    fig, ax = plt.subplots(figsize=(14, 6))
+    ax.set_xlim(0, 14.6); ax.set_ylim(0, 6); ax.axis("off")
     stages = [
         ("光源/投影", "第五、七章", "伽马、同步\n光谱、散斑"),
         ("场景", "第五、七章", "高反、散射\n偏振、互反射"),
-        ("镜头", "第二、三、四、九章", "PSF/MTF\n畸变、景深"),
+        ("镜头", "第二至四、九章", "PSF/MTF\n畸变、景深"),
         ("传感器", "第六章", "光子/读出噪声\n饱和、非线性"),
-        ("相位/匹配", "第四、七章", "σ_φ、展开\n伽马谐波"),
-        ("三角测量", "第三、八章", "Z²/(B f_x)\n标定误差"),
+        ("相位/匹配", "第四、七章", r"$\sigma_\varphi$、展开" "\n伽马谐波"),
+        ("三角测量", "第三、八章", r"$Z^2/(B f_x)$" "\n标定误差"),
         ("点云", "", "拼接、滤波\n运动"),
     ]
-    w = 1.7
+    w = 1.85
     for i, (n, ch, err) in enumerate(stages):
-        x = 0.3 + i * 1.95
-        ax.add_patch(FancyBboxPatch((x, 3.2), w, 1.2, boxstyle="round,pad=0.05", fc="#E3F2FD", ec="#1565C0"))
-        ax.text(x + w / 2, 3.95, n, ha="center", fontsize=13, weight="bold")
-        ax.text(x + w / 2, 3.42, ch, ha="center", fontsize=10, color="#333")
-        ax.text(x + w / 2, 2.4, err, ha="center", va="center", fontsize=11,
+        x = 0.3 + i * 2.05
+        ax.add_patch(FancyBboxPatch((x, 3.2), w, 1.3, boxstyle="round,pad=0.05", fc="#E3F2FD", ec="#1565C0"))
+        ax.text(x + w / 2, 3.95, n, ha="center", fontsize=16, weight="bold")
+        ax.text(x + w / 2, 3.42, ch, ha="center", fontsize=12, color="#333")
+        ax.text(x + w / 2, 2.2, err, ha="center", va="center", fontsize=13,
                 bbox=dict(boxstyle="round", fc="#FFF8E1", ec="#E65100"))
         if i < len(stages) - 1:
-            ax.annotate("", xy=(x + 1.95, 3.8), xytext=(x + w, 3.8), arrowprops=dict(arrowstyle="->", lw=1.3))
-    ax.text(7, 5.2, "从光子到点云：每一环都向误差预算贡献随机项与系统项", ha="center", fontsize=15)
-    ax.text(7, 1.0, "随机项：可平均（多帧、更高 SNR）    系统项：不可平均，需建模、标定或改设计",
-            ha="center", fontsize=12, color="#333")
-    fig.text(0.5, 0.01, NOTE, ha="center", fontsize=7, color="#888")
+            ax.annotate("", xy=(x + 2.05, 3.8), xytext=(x + w, 3.8), arrowprops=dict(arrowstyle="->", lw=1.3))
+    ax.text(7.3, 5.2, "从光子到点云：每一环都向误差预算贡献随机项与系统项", ha="center", fontsize=18)
+    ax.text(7.3, 1.0, "随机项：可平均（多帧、更高 SNR）    系统项：不可平均，需建模、标定或改设计",
+            ha="center", fontsize=15, color="#333")
+    fig.text(0.5, 0.01, NOTE, ha="center", fontsize=10, color="#888")
     fig.savefig(OUT / "fig-error-budget-map.pdf", bbox_inches="tight"); plt.close(fig)
 
 

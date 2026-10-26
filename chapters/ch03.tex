@@ -23,7 +23,7 @@
   \quad\text{（或}\ \varphi=\tfrac{2\pi}{\wavelength}\,\OPD\text{）}.
   \label{eq:ch03-phase-opd}
 \end{equation}
-记号锁定：$\wavelength$ 只表示波长；光学频率为 $\nuopt$（满足 $c=\wavelength\nuopt$ 在真空中）；焦距仍是 $f$，绝不用 $f$ 表示频率。
+记号锁定：$\wavelength$ 只表示波长；光学频率为 $\nuopt$（满足真空中 $c=\wavelength\nuopt$，此处 $c$ 为真空光速，不是第~\ref{ch:01}~章的弥散圆直径）；焦距仍是 $f$，绝不用 $f$ 表示频率。
 
 \subsection{双光束干涉与条纹}
 
@@ -124,11 +124,11 @@ $D$ 为孔径。物镜侧常用数值孔径 $\NA=n\sin\alpha$；瑞利分辨距�
 
 \subsection{例：一幅口内条纹在通带中的位置}
 
-用数把「条纹要落在系统通带内」落到具体频率上（数量级示意）：像面条纹周期 $P=16$ 像素，像元 $p=3\,\mu\mathrm{m}$，放大率 $|m|=0.4$，波长 $450\,\mathrm{nm}$，工作 F 数 $N_F=8$。
+用数把「条纹要落在系统通带内」落到具体频率上（数量级示意）：像面条纹周期 $P=16$ 像素，像元 $p=3\,\mu\mathrm{m}$，放大率 $|m|=0.4$，波长 $450\,\mathrm{nm}$，标称 F 数 $N_F=8$。
 \begin{enumerate}
   \item 像面条纹周期 $16\times3=48\,\mu\mathrm{m}$，像面空间频率 $\xi=1/0.048\approx20.8$ 周期/毫米。
   \item 物面条纹周期 $48/0.4=120\,\mu\mathrm{m}$，即物面约 $8.3$ 周期/毫米。
-  \item 像方有效 F 数 $N_F(1+|m|)=11.2$，非相干衍射截止 $\xi_c=1/(\lambda N_F(1+|m|))\approx1/(0.45\times10^{-3}\times11.2)\approx198$ 周期/毫米。
+  \item 像方工作 F 数 $N_{F,w}=N_F(1+|m|)=11.2$，非相干衍射截止 $\xi_c=1/(\lambda N_{F,w})\approx1/(0.45\times10^{-3}\times11.2)\approx198$ 周期/毫米。
   \item 归一化频率 $\xi/\xi_c\approx0.105$，衍射极限 $\MTF$ 约 $0.87$（第~\ref{ch:08}~章式~\eqref{eq:ch08-diffmtf}）。
   \item 采样：奈奎斯特频率 $1/(2p)\approx167$ 周期/毫米，条纹远低于它，每周期 $16$ 个采样点。
 \end{enumerate}

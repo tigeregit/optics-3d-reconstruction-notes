@@ -41,10 +41,18 @@
 | \(V_0\) | 投影端（调制器上）条纹调制度；ch08 级联输入 | 勿用 \(\gamma_0\)；\(\lvert\gamma\rvert\) 仅表相干度 |
 | \(\delta u\) | 单视图像面定位误差（像素） | |
 | \(\delta d\) | 视差误差（像素）；双相机独立同分布时 \(\delta d=\sqrt2\,\delta u\)，相机–投影仪对中为相位误差折算值 | 三角测量式统一用 \(\delta d\) |
-| \(c\) | ch01/ch08：弥散圆直径；ch09：光速（各章首现处注明） | 同章内不得两义并用 |
+| \(c\) | ch01/ch08：弥散圆直径；ch03/ch09：真空光速（各章首现处注明） | 同章内不得两义并用 |
 | \(\eta_{\mathrm{QE}}\) | 传感器量子效率（第 5 章） | 裸 \(\eta\) 仅指空间频率 |
-| \(\xi_c\) | 衍射截止空间频率 \(1/(\lambda N_F)\) | — |
-| \(N_F\) | 工作 F 数 | 勿与相移步数 \(N\) 混用 |
+| \(\xi_c\) | 像方非相干衍射截止空间频率 \(1/(\lambda N_{F,w})\) | — |
+| \(N_F\) | 标称 F 数 \(f/D\) | 勿与相移步数 \(N\) 混用 |
+| \(N_{F,w}\) | 像方工作 F 数 \(N_F(1+\lvert m\rvert)\)；衍射截止、散斑、Airy 用此量 | 勿与 \(N_F\) 混写 |
+| \(\Gamma\) | 投影/显示伽马指数（ch06/ch07/ch10） | 勿用 \(\gamma\)（仅相干度） |
+| \(c_x,\,c_y\) | 主点（像素，ch00 起） | 与弥散圆/光速 \(c\) 以下标区分 |
+| \(d_\Pi\) | 光平面常数 \(\boldsymbol n^\top\boldsymbol X=d_\Pi\)（ch07） | 勿用 \(h\)（PSF） |
+| \(\tau\) | 射线参数 \(\boldsymbol X=\tau\tilde{\boldsymbol x}\)（ch07） | 勿用 \(t\)（平移） |
+| \(q_\Pi\) | 点积 \(\boldsymbol n^\top\tilde{\boldsymbol x}\)（ch07） | 勿用 \(s\)（齐次尺度） |
+| \(t_w\) | 窗片厚度（ch01） | 勿用裸 \(t\) |
+| \(I_s,\,I_d\) | 镜面/漫射分量强度（ch04） | — |
 | \(F_m\)（\(\omega_m=2\pi F_m\)） | ToF 强度调制频率（第 9 章） | 勿用 \(\nu_m\)、\(f_{\mathrm{mod}}\) |
 
 对应宏见 `preamble.tex`（`\wavelength`、`\nuopt`、`\focal` 等）。

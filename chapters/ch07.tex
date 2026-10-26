@@ -122,9 +122,9 @@ $s$ 为齐次尺度。两个视图（两台相机，或相机与投影仪）各�
 
 \subsection{推导：相机射线与投影光平面求交}
 
-结构光常用「相机 + 投影仪」而非两台相机。相位确定投影仪的一列，即空间中一张光平面 $\boldsymbol n^\top\boldsymbol X=h$（在相机坐标系中表示，$\boldsymbol n$ 与 $h$ 由标定给出）。相机像素的归一化射线 $\boldsymbol X=t\,\tilde{\boldsymbol x}$，$\tilde{\boldsymbol x}=(x,y,1)^\top$。代入平面方程：
+结构光常用「相机 + 投影仪」而非两台相机。相位确定投影仪的一列，即空间中一张光平面 $\boldsymbol n^\top\boldsymbol X=d_\Pi$（在相机坐标系中表示，$\boldsymbol n$ 与平面常数 $d_\Pi$ 由标定给出）。相机像素的归一化射线 $\boldsymbol X=\tau\,\tilde{\boldsymbol x}$（$\tau$ 为射线参数），$\tilde{\boldsymbol x}=(x,y,1)^\top$。代入平面方程：
 \[
-  t=\frac{h}{\boldsymbol n^\top\tilde{\boldsymbol x}},\qquad Z=t .
+  \tau=\frac{d_\Pi}{\boldsymbol n^\top\tilde{\boldsymbol x}},\qquad Z=\tau .
 \]
 每像素只需一次点积与一次除法，适合 GPU 逐像素计算。条件性：当 $\boldsymbol n^\top\tilde{\boldsymbol x}\to0$，射线几乎平行于光平面，$Z$ 对相位与标定误差极端敏感——这正是交会角过小的情形。对平面法向的小误差 $\delta\boldsymbol n$，
 \[
@@ -150,7 +150,7 @@ $s$ 为齐次尺度。两个视图（两台相机，或相机与投影仪）各�
 \end{tabular}
 \end{center}
 
-读表：单帧随机噪声只有约 $1\,\mu\mathrm{m}$，但焦距的千分之一误差直接带来 $15\,\mu\mathrm{m}$ 的整体尺度误差，比随机项大一个数量级。若只看点云「平不平滑」，会误以为系统精度在微米级；只有用已知尺寸的标准件检验才看得到尺度误差。这就是为什么第~\ref{ch:10}~章强调把误差分成随机与系统两类分别核查。
+表中伽马项取四步相移、未校正 $\Gamma=2.2$ 的仿真值；第~\ref{ch:10}~章预算表的 $2$--$5\,\mu\mathrm{m}$ 是示意性综合范围，涵盖少步数、校正不完全与器件非线性等场景，二者口径不同。读表：单帧随机噪声只有约 $1\,\mu\mathrm{m}$，但焦距的千分之一误差直接带来 $15\,\mu\mathrm{m}$ 的整体尺度误差，比随机项大一个数量级。若只看点云「平不平滑」，会误以为系统精度在微米级；只有用已知尺寸的标准件检验才看得到尺度误差。这就是为什么第~\ref{ch:10}~章强调把误差分成随机与系统两类分别核查。
 
 \section{限度}
 \label{sec:ch07-limits}
@@ -187,7 +187,7 @@ $s$ 为齐次尺度。两个视图（两台相机，或相机与投影仪）各�
 基线 $B$ 同时受精度与遮挡约束，数量级示意，$Z=15\,\mathrm{mm}$、$\delta d=0.05$ 像素、$f_x=1500$ 像素。
 \begin{itemize}
   \item \textbf{精度给下限。} 要 $\delta Z\le2\,\mu\mathrm{m}$：$f_xB\ge Z^2\delta d/\delta Z=225\times0.05/0.002=5625\,\mathrm{mm}\cdot$像素，$B\ge3.75\,\mathrm{mm}$。
-  \item \textbf{遮挡给上限。} 牙间隙宽 $w=0.5\,\mathrm{mm}$、深 $h=3\,\mathrm{mm}$，要让投影与相机都看到隙底，交会角需满足 $\theta\lesssim w/h\approx0.17$，即 $B\lesssim\theta Z\approx2.5\,\mathrm{mm}$。
+  \item \textbf{遮挡给上限。} 牙间隙宽 $w_g=0.5\,\mathrm{mm}$、深 $\ell_g=3\,\mathrm{mm}$，要让投影与相机都看到隙底，交会角需满足 $\theta\lesssim w_g/\ell_g\approx0.17$，即 $B\lesssim\theta Z\approx2.5\,\mathrm{mm}$。
 \end{itemize}
 两个约束冲突：精度要 $B\ge3.75\,\mathrm{mm}$，遮挡要 $B\le2.5\,\mathrm{mm}$。单一视角下二者不可兼得。实际的出口：多视角扫描（隙底由别的角度补全，让基线服从精度）；降低 $\delta d$（更高 $\SNR$、更短条纹周期）以放宽下限；或接受隙底区精度较低。这也解释了为什么口扫依赖连续多帧拼接，而不是追求单帧覆盖全部几何。
 
@@ -207,9 +207,9 @@ $s$ 为齐次尺度。两个视图（两台相机，或相机与投影仪）各�
   \item \textbf{（比较）} 某团队考虑用「双相机 + 条纹」替代「单相机 + 投影仪」。列出精度、标定、遮挡、体积四个方面的变化。
   \item \textbf{（推导）} 推导二阶偏置 $Z\sigma_d^2/d^2$，并说明为何先平均视差再换算深度能消除它。
   \item \textbf{（计算）} 光平面法向与相机射线夹角为 $80^\circ$（即 $\boldsymbol n^\top\tilde{\boldsymbol x}/|\tilde{\boldsymbol x}|=\cos80^\circ$）。若法向在射线方向的分量误差为 $10^{-3}$，求相对深度误差，并与夹角 $45^\circ$ 时比较。
-  \item \textbf{（口扫场景）} 正文预算表中，若伽马残余改用三步（$0.23\,\mathrm{rad}$），预算主导项会变成什么？要让伽马项小于光子噪声项，三步方案需要把伽马残余压到多少（按 $\gamma\approx1.1$ 时 $0.022\,\mathrm{rad}$ 线性插值估计）？
+  \item \textbf{（口扫场景）} 正文预算表中，若伽马残余改用三步（$0.23\,\mathrm{rad}$），预算主导项会变成什么？要让伽马项小于光子噪声项，三步方案需要把伽马残余压到多少（按 $\Gamma\approx1.1$ 时 $0.022\,\mathrm{rad}$ 线性插值估计）？
   \item \textbf{（医学重建）} 用于体表的大视场结构光，$Z=500\,\mathrm{mm}$，$f_xB=2.5\times10^5\,\mathrm{mm}\cdot$像素，$\delta d=0.1$ 像素。求一阶 $\delta Z$；若焦距标定误差仍为 $0.1\%$，尺度误差是多少？哪一项主导？
-  \item \textbf{（C++/CUDA 实践）} 写出射线—光平面求交的核函数伪代码，包括无效像素判定，并说明 $\boldsymbol n$、$h$ 如何随投影仪列（相位）变化而查表或插值。
+  \item \textbf{（C++/CUDA 实践）} 写出射线—光平面求交的核函数伪代码，包括无效像素判定，并说明 $\boldsymbol n$、$d_\Pi$ 如何随投影仪列（相位）变化而查表或插值。
 \end{enumerate}
 
 \section{习题讲解}
@@ -225,7 +225,7 @@ $s$ 为齐次尺度。两个视图（两台相机，或相机与投影仪）各�
   \item 精度：相位只用作匹配特征，投影仪畸变与伽马不再进入几何，系统性改善；标定：两相机标定更稳定，投影仪无需标定；遮挡：需三者同时可见，缺失增多；体积：多一台相机，探头变大，成本上升。
   \item 见正文展开；取期望时一阶项 $\mathbb E[e]=0$ 消失，二阶项留下 $\sigma_d^2/d^2$。先平均 $n$ 帧视差，$\sigma_d^2$ 降为 $1/n$，偏置随之降为 $1/n$；而对深度直接平均，每帧都带同号偏置，平均后不变。
   \item 相对误差 $\approx10^{-3}/\cos80^\circ=10^{-3}/0.174\approx0.58\%$；$45^\circ$ 时 $10^{-3}/0.707\approx0.14\%$。掠射时约放大 $4$ 倍。
-  \item 三步伽马误差 $0.23\,\mathrm{rad}$ 对应约 $11\,\mu\mathrm{m}$，与焦距标定项（$15\,\mu\mathrm{m}$）同量级，成为第二大项，远超随机噪声。要低于 $0.020\,\mathrm{rad}$，大致需要残余伽马接近 $1.1$ 甚至更小（$\gamma=1.1$ 时 $0.022\,\mathrm{rad}$，刚好相当）；即残余非线性需校正到百分之几以内。
+  \item 三步伽马误差 $0.23\,\mathrm{rad}$ 对应约 $11\,\mu\mathrm{m}$，与焦距标定项（$15\,\mu\mathrm{m}$）同量级，成为第二大项，远超随机噪声。要低于 $0.020\,\mathrm{rad}$，大致需要残余伽马接近 $1.1$ 甚至更小（$\Gamma=1.1$ 时 $0.022\,\mathrm{rad}$，刚好相当）；即残余非线性需校正到百分之几以内。
   \item $\delta Z=500^2\times0.1/(2.5\times10^5)=0.1\,\mathrm{mm}$；尺度误差 $0.1\%\times500=0.5\,\mathrm{mm}$，尺度误差主导。大视场下标定的相对精度比亚像素匹配更关键。
-  \item 每线程一像素：读相位 $\varphi$ 与调制度 $M$；$M$ 低于门限则输出无效；由 $\varphi$ 计算投影仪列坐标 $u_p$；按 $u_p$ 在预计算表中线性插值得到 $(\boldsymbol n,h)$（表在标定后对每个投影仪列算好，放纹理或常量内存）；计算 $s=\boldsymbol n^\top\tilde{\boldsymbol x}$（$\tilde{\boldsymbol x}$ 可预存为去畸变查找表），若 $|s|<s_{\min}$ 输出无效，否则 $Z=h/s$。光平面随列连续变化，相邻列间线性插值的误差远小于标定误差。
+  \item 每线程一像素：读相位 $\varphi$ 与调制度 $M$；$M$ 低于门限则输出无效；由 $\varphi$ 计算投影仪列坐标 $u_p$；按 $u_p$ 在预计算表中线性插值得到 $(\boldsymbol n,d_\Pi)$（表在标定后对每个投影仪列算好，放纹理或常量内存）；计算点积 $q_\Pi=\boldsymbol n^\top\tilde{\boldsymbol x}$（$\tilde{\boldsymbol x}$ 可预存为去畸变查找表），若 $|q_\Pi|<q_{\min}$ 输出无效，否则 $Z=d_\Pi/q_\Pi$。光平面随列连续变化，相邻列间线性插值的误差远小于标定误差。
 \end{enumerate}
