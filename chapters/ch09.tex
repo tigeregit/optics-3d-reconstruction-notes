@@ -58,16 +58,16 @@ OCT 的独特能力是\emph{看进去}：给出组织内部多层界面的反射
 
 \textbf{脉冲 ToF}：发出短脉冲，测量往返时间 $\Delta t$，$Z=c\Delta t/2$。$1\,\mathrm{mm}$ 深度对应约 $6.7\,\mathrm{ps}$ 往返时间，可见毫米级精度需要皮秒级时间分辨。
 
-\textbf{相位 ToF（调幅连续波）}：光源强度按调制频率 $\nu_m$（注意：$\nu_m$ 是强度包络的调制频率，通常为数十兆赫兹，远低于光频 $\nu$）正弦调制。返回光相对发射光有相位延迟 $\phi_m$，则
+\textbf{相位 ToF（调幅连续波）}：光源强度按调制频率 $F_m$（角频率 $\omega_m=2\pi F_m$；注意：$F_m$ 是强度包络的调制频率，通常为数十兆赫兹，远低于光频 $\nu$）正弦调制。返回光相对发射光有相位延迟 $\phi_m$，则
 \begin{equation}
-  Z=\frac{c}{4\pi\nu_m}\,\phi_m,\qquad Z_{\mathrm{amb}}=\frac{c}{2\nu_m}.
+  Z=\frac{c}{4\pi F_m}\,\phi_m,\qquad Z_{\mathrm{amb}}=\frac{c}{2F_m}.
   \label{eq:ch09-tof}
 \end{equation}
-$Z_{\mathrm{amb}}$ 为无模糊量程：$\nu_m=20\,\mathrm{MHz}$ 时约 $7.5\,\mathrm{m}$。相位通常由每像素四个相位采样求得，形式与第~\ref{ch:06}~章的四步相移完全相同 \citep{LangeSeitz2001ToF}，于是深度噪声
+$Z_{\mathrm{amb}}$ 为无模糊量程：$F_m=20\,\mathrm{MHz}$ 时约 $7.5\,\mathrm{m}$。相位通常由每像素四个相位采样求得，形式与第~\ref{ch:06}~章的四步相移完全相同 \citep{LangeSeitz2001ToF}，于是深度噪声
 \[
-  \sigma_Z\approx\frac{c}{4\pi\nu_m}\,\sigma_{\phi_m},
+  \sigma_Z\approx\frac{c}{4\pi F_m}\,\sigma_{\phi_m},
 \]
-$\sigma_{\phi_m}$ 同样反比于调制幅与 $\SNR$。这里的「条纹」不在空间而在时间上：$c/(2\nu_m)$ 扮演条纹周期的角色。即便 $\nu_m=100\,\mathrm{MHz}$，周期也有 $1.5\,\mathrm{m}$，$0.01\,\mathrm{rad}$ 相位噪声对应约 $2.4\,\mathrm{mm}$。这解释了 ToF 在近距离精细测量上的根本劣势。多频 ToF 展开相位的思路与第~\ref{ch:06}~章多频外差相同。
+$\sigma_{\phi_m}$ 同样反比于调制幅与 $\SNR$。这里的「条纹」不在空间而在时间上：$c/(2F_m)$ 扮演条纹周期的角色。即便 $F_m=100\,\mathrm{MHz}$，周期也有 $1.5\,\mathrm{m}$，$0.01\,\mathrm{rad}$ 相位噪声对应约 $2.4\,\mathrm{mm}$。这解释了 ToF 在近距离精细测量上的根本劣势。多频 ToF 展开相位的思路与第~\ref{ch:06}~章多频外差相同。
 
 ToF 的典型误差：多径干扰（墙角、凹面中光经过多次反射，等价于结构光的互反射）、次表面散射造成的延迟、混合像素（边缘飞点），以及温度引起的相位漂移。
 
@@ -76,15 +76,15 @@ ToF 的典型误差：多径干扰（墙角、凹面中光经过多次反射，�
 \begin{table}[htbp]
   \centering
   \small
-  \begin{tabular}{@{}lllll@{}}
+  \begin{tabular}{@{}p{0.10\textwidth}p{0.12\textwidth}p{0.19\textwidth}p{0.19\textwidth}p{0.22\textwidth}@{}}
     \toprule
     方式 & 深度来源 & 轴向分辨率（量级） & 量程（量级） & 主要限制 \\
     \midrule
-    共聚焦 & 焦点位置 & $\mu\mathrm{m}$--十余 $\mu\mathrm{m}$ & 亚毫米--十余毫米 & 扫描时间、$\NA$ 与视场 \\
-    OCT & 相干门 & 数 $\mu\mathrm{m}$ & 毫米级 & 量程浅、逐点扫描 \\
-    结构光 & 三角+相位 & 数--数十 $\mu\mathrm{m}$ & 毫米--数百毫米 & $\MTF$、散射、遮挡 \\
-    立体 & 三角+匹配 & 十余 $\mu\mathrm{m}$--毫米 & 毫米--十余米 & 纹理、基线 \\
-    ToF & 往返时间 & 毫米--厘米 & 十厘米--十余米 & 多径、时间分辨 \\
+    共聚焦 & 焦点位置 & $1$--$20\,\mu\mathrm{m}$ & $0.1$--$20\,\mathrm{mm}$ & 扫描时间、$\NA$ 与视场 \\
+    OCT & 相干门 & $2$--$10\,\mu\mathrm{m}$ & $0.5$--$5\,\mathrm{mm}$ & 量程浅、逐点扫描 \\
+    结构光 & 三角+相位 & $3$--$50\,\mu\mathrm{m}$ & $1$--$500\,\mathrm{mm}$ & $\MTF$、散射、遮挡 \\
+    立体 & 三角+匹配 & $10\,\mu\mathrm{m}$--$1\,\mathrm{mm}$ & $1\,\mathrm{mm}$--$20\,\mathrm{m}$ & 纹理、基线 \\
+    ToF & 往返时间 & $1$--$30\,\mathrm{mm}$ & $0.1$--$20\,\mathrm{m}$ & 多径、时间分辨 \\
     \bottomrule
   \end{tabular}
   \caption{深度传感方式能力边界（数量级示意，非具体产品指标）。}
@@ -131,7 +131,7 @@ ToF 的典型误差：多径干扰（墙角、凹面中光经过多次反射，�
 \begin{enumerate}
   \item \textbf{（计算）} 共聚焦物镜 $\NA=0.3$、$\lambda=488\,\mathrm{nm}$，估算层切厚度量级。若改为 $\NA=0.1$ 呢？对口内全牙扫描意味着什么？
   \item \textbf{（计算）} OCT 光源 $\lambda_0=1300\,\mathrm{nm}$、$\Delta\lambda=100\,\mathrm{nm}$，求空气中与牙釉质（$n\approx1.6$）中的轴向分辨率。
-  \item \textbf{（计算）} 相位 ToF $\nu_m=60\,\mathrm{MHz}$，求无模糊量程；若相位噪声 $0.005\,\mathrm{rad}$，深度噪声多少？与口内精度目标对比。
+  \item \textbf{（计算）} 相位 ToF $F_m=60\,\mathrm{MHz}$，求无模糊量程；若相位噪声 $0.005\,\mathrm{rad}$，深度噪声多少？与口内精度目标对比。
   \item \textbf{（重建场景）} 在深而窄的龈沟中，结构光扫描缺失严重而共聚焦扫描较完整。从光路几何解释。
   \item \textbf{（重建场景）} ToF 相机拍摄墙角时，角落深度系统性偏大且角落被「磨圆」。原因是什么？它与结构光中的哪种误差同源？
   \item \textbf{（设计）} 若要检测修复体边缘下方的微小间隙（数十微米、位于表面下方），应考虑哪种方法？说明理由与代价。
@@ -143,7 +143,7 @@ ToF 的典型误差：多径干扰（墙角、凹面中光经过多次反射，�
 \begin{enumerate}
   \item $\lambda/\NA^2\approx0.488/0.09\approx5.4\,\mu\mathrm{m}$；$\NA=0.1$ 时约 $49\,\mu\mathrm{m}$。$\NA$ 大层切薄、精度高，但视场与景深小，需要更长的扫描行程与时间；口内常取中等 $\NA$ 折中。
   \item $\Delta z=0.44\times1300^2/100\,\mathrm{nm}\approx7.5\,\mu\mathrm{m}$（空气），釉质中约 $4.7\,\mu\mathrm{m}$。
-  \item $Z_{\mathrm{amb}}=c/(2\nu_m)=2.5\,\mathrm{m}$；$\sigma_Z=c\sigma_\phi/(4\pi\nu_m)\approx3\times10^8\times0.005/(4\pi\times6\times10^7)\approx2\,\mathrm{mm}$，比口内目标大约两个数量级。
+  \item $Z_{\mathrm{amb}}=c/(2F_m)=2.5\,\mathrm{m}$；$\sigma_Z=c\sigma_{\phi_m}/(4\pi F_m)\approx3\times10^8\times0.005/(4\pi\times6\times10^7)\approx2\,\mathrm{mm}$，比口内目标大约两个数量级。
   \item 结构光需要投影与相机两个方向都能看到沟底，基线带来阴影与遮挡；共聚焦照明与观测同轴，只要一个方向能看到即可。
   \item 多径干扰：光在两面墙之间多次反射后返回，路径更长，相位延迟偏大。与结构光中的互反射同源，都违反「每像素只接收一次直接反射」的假设。
   \item OCT：能分辨表面以下的界面，轴向分辨率数微米。代价：量程浅、扫描慢、系统复杂，需与表面扫描配合使用。
