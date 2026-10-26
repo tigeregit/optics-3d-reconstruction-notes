@@ -94,6 +94,39 @@ $g$ 含模拟增益与 ADC，$n_{\mathrm{dark}}$ 暗电流贡献，$n_{\mathrm{r
 
 手持系统存在允许的最大曝光 $\tau_{\max}$，由可接受拖影（像素）与角速度决定。在 $\tau\le\tau_{\max}$ 下若光子不足，只能加投影功率、开光圈（付 $Z_d$ 代价）、或改善量子效率/降低读出噪声。把「运动模糊限制」与「光子 $\SNR$ 限制」画在同一张预算表上，才能避免无休止地在算法侧加平滑。
 
+\subsection{推导：相位噪声写成 $V$ 与 $\SNR$ 的形式}
+
+式~\eqref{eq:ch05-phase-snr} 只写了比例关系，这里给出系数。第~\ref{ch:06}~章将推出 $N$ 步相移的相位噪声 $\sigma_\varphi\approx\sqrt{2/N}\,\sigma_I/M$。把 $M=VA$、$\SNR=A/\sigma_I$（以平均灰度定义的单帧信噪比）代入：
+\begin{equation}
+  \sigma_\varphi\approx\sqrt{\frac{2}{N}}\;\frac{1}{V\cdot\SNR}.
+  \label{eq:ch05-phase-snr-N}
+\end{equation}
+适用条件：各帧噪声独立、同方差，且 $\sigma_I$ 在相移帧之间近似不变（光子噪声随灰度变化，严格说条纹亮处与暗处方差不同，但 $V$ 不太接近 $1$ 时取平均值误差不大）；未饱和、无削顶。若光子噪声主导，$\SNR=\sqrt{N_e}$（$N_e$ 为平均电子数），于是 $\sigma_\varphi\approx\sqrt{2/(N N_e)}/V$：总电子数 $NN_e$ 才是决定相位精度的量，多拍几帧与每帧多收光在光子噪声限下等价。
+
+\subsection{推导：光子传递曲线}
+
+要把 DN 换成电子数，需要相机的转换增益。设 $g$ 为每个电子对应的 DN（DN/e$^-$），信号 $N_e$ 个电子，读出噪声 $\sigma_{\mathrm r}$ 个电子。均值与方差（以 DN 计）为
+\[
+  \mu_{\mathrm{DN}}=gN_e,\qquad
+  \sigma_{\mathrm{DN}}^2=g^2N_e+g^2\sigma_{\mathrm r}^2=g\,\mu_{\mathrm{DN}}+g^2\sigma_{\mathrm r}^2 .
+\]
+第二个等式用了泊松方差等于均值。于是在均匀光照下扫几档曝光，画 $\sigma_{\mathrm{DN}}^2$ 对 $\mu_{\mathrm{DN}}$ 的直线：斜率是 $g$，截距是 $g^2\sigma_{\mathrm r}^2$ \citep{Janesick2001PhotonTransfer}。实测时用两帧相减消除固定图案噪声（相减后方差为单帧的两倍），并扣除暗场偏置。
+
+\textbf{例（数量级示意）。} 两档曝光测得 $(\mu,\sigma^2)=(1000,260)$、$(2000,510)$（DN 与 DN$^2$，已扣偏置）。斜率 $g=250/1000=0.25\,\mathrm{DN/e^-}$，即每 DN 对应 $4$ 个电子；截距 $260-250=10\,\mathrm{DN^2}$，$\sigma_{\mathrm r}=\sqrt{10}/0.25\approx12.6$ 个电子。12 位 ADC 满量程 $4095$ DN 对应约 $16000$ 个电子。这些数让第~\ref{ch:00}~章的走查有了实测入口：DN 读数乘 $4$ 就是电子数，$\SNR$ 可以直接算。曲线在高端偏离直线（方差下降）处就是饱和或非线性的起点，结构光的曝光上限应留在它以下。
+
+\subsection{例：自动曝光让一帧变亮 $5\%$ 会怎样}
+
+用四步相移把「自动曝光破坏一致性」算出来。四步时 $\varphi_w=\operatorname{atan2}(S,C)$，$S=I_3-I_1=2M\sin\varphi$，$C=I_0-I_2=2M\cos\varphi$。设第 $1$ 帧被整体放大 $(1+\varepsilon)$，即 $I_1\to(1+\varepsilon)I_1$，其中 $I_1=A+M\cos(\varphi+\pi/2)=A-M\sin\varphi$。则 $S$ 的变化 $\delta S=-\varepsilon(A-M\sin\varphi)$，$C$ 不变。对 $\varphi=\operatorname{atan2}(S,C)$ 线性化：
+\[
+  \delta\varphi=\frac{C\,\delta S-S\,\delta C}{S^2+C^2}
+  =-\frac{\varepsilon}{2}\,\cos\varphi\Bigl(\frac{1}{V}-\sin\varphi\Bigr).
+\]
+误差幅度约为 $\varepsilon/(2V)$，且随 $\varphi$ 周期变化，表现为与条纹同频（及二倍频）的波纹。数值：$\varepsilon=0.05$、$V=0.5$，误差峰值约 $0.05\,\mathrm{rad}$，是第~\ref{ch:00}~章走查中光子噪声（$0.02\,\mathrm{rad}$）的两倍多；折算到深度，$\delta d=16\times0.05/6.28\approx0.13$ 像素，$\delta Z\approx2.4\,\mu\mathrm{m}$，而且是\emph{系统}波纹，平均多少次都不会消失。$V$ 越低，同样的曝光跳变造成的误差越大，因为跳变作用在 $A$ 上，而相位只由 $M$ 承载。
+
+\subsection{例：量化噪声何时要紧}
+
+均匀量化的误差方差为 $q^2/12$（$q$ 为一个 DN 步长）。把它与光子噪声比较：上例中 $g=0.25$，平均 $A=5000$ 电子 $=1250$ DN 时光子噪声 $\sqrt{5000}\times0.25\approx18$ DN，量化噪声 $1/\sqrt{12}\approx0.29$ DN，可以忽略。但若把数据压成 8 位（$q=16$ 个原 DN），量化噪声 $16/\sqrt{12}\approx4.6$ DN，与光子噪声相比已不可忽略；暗区（$A$ 只有几百电子）更会被量化主导。经验规则：量化步长应小于噪声标准差，即每个 DN 对应的电子数小于 $\sqrt{N_e}$ 的若干分之一。
+
 \section{限度}
 \label{sec:ch05-limits}
 
@@ -134,6 +167,11 @@ $\Phi\to L\to E\to\mathrm{DN}$ 的链条说明灰度不是辐照度；$\SNR$ 与
   \item \textbf{（重建场景）} 手持短曝光导致点云毛刺；加长曝光后运动拖影。提出一种光学–采集折中方案（含投影侧）。
   \item \textbf{（诊断）} 两台相机立体系统，AE 各自独立。匹配代价在纹理区不稳定。光学与配置上最小改动是什么？
   \item \textbf{（综合）} 光圈从 $F/8$ 开到 $F/4$，按式~\eqref{eq:ch05-image-irr} 粗估 $E_{\mathrm{img}}$ 倍数；同时列出对 $Z_d$ 与衍射的副作用。
+  \item \textbf{（推导）} 从 $\sigma_\varphi\approx\sqrt{2/N}\,\sigma_I/M$ 推出式~\eqref{eq:ch05-phase-snr-N}，并说明在光子噪声限下，「六步、每帧电子数减半」与「三步、每帧电子数不变」的相位噪声关系。
+  \item \textbf{（计算）} 光子传递实验得 $(\mu,\sigma^2)=(500,140)$、$(3000,765)$（DN、DN$^2$，已扣偏置并已校正为单帧方差）。求 $g$、每 DN 电子数与读出噪声（电子）。
+  \item \textbf{（计算）} 正文自动曝光例中，若跳变发生在第 $0$ 帧（$I_0$），推导 $\delta\varphi$ 的表达式。与第 $1$ 帧跳变相比，误差随 $\varphi$ 的形状有何不同？
+  \item \textbf{（口扫场景）} 某设备演示模式开着自动曝光，帧间亮度波动约 $\pm3\%$，被测牙面 $V\approx0.3$。估算相位系统误差的量级，并与 $\sigma_\varphi=0.02\,\mathrm{rad}$ 的光子噪声比较。
+  \item \textbf{（C++/CUDA 实践）} 相机输出 12 位原始数据，但传输链路为节省带宽先截成高 8 位。给出量化噪声（以原 12 位 DN 计）并判断：在 $A=200$ 电子的暗区（$g=0.25$），这一截位是否会主导噪声？
 \end{enumerate}
 
 \section{习题讲解}
@@ -147,4 +185,9 @@ $\Phi\to L\to E\to\mathrm{DN}$ 的链条说明灰度不是辐照度；$\SNR$ 与
   \item 提高投影亮度以在短曝光下保 $N_{\mathrm{ph}}$；或脉冲投影与全局快门同步；或短曝光多帧平均。光学上可略收光圈换 $Z_d$ 仅当模糊主因是离焦而非运动。
   \item 关闭两侧 AE，手动匹配曝光，使重叠视场 DN 直方图大致可对齐；必要时辐射定标。这比改匹配窗口更对症。
   \item $F\#$ 减半，$(F\#)^{2}$ 变为 $1/4$，$E_{\mathrm{img}}$ 约 $\times4$。副作用：$Z_d$ 变窄，有效 $\NA$ 变大（衍射斑可变小，但像差/场曲可能更明显），需重验清晰工作距。
+  \item 代入 $M=VA$、$\sigma_I=A/\SNR$ 即得。光子噪声限下 $\sigma_\varphi\approx\sqrt{2/(NN_e)}/V$：六步、$N_e/2$ 时 $NN_e=3N_e$；三步、$N_e$ 时也为 $3N_e$，两者相等。区别在系统项：六步对伽马谐波更不敏感（第~\ref{ch:06}~章），三步帧数少、对运动更友好。
+  \item 斜率 $g=(765-140)/(3000-500)=0.25\,\mathrm{DN/e^-}$，每 DN $4$ 个电子；截距 $140-0.25\times500=15\,\mathrm{DN^2}$，$\sigma_{\mathrm r}=\sqrt{15}/0.25\approx15.5$ 个电子。
+  \item $I_0=A+M\cos\varphi$，$\delta C=\varepsilon(A+M\cos\varphi)$，$\delta S=0$；$\delta\varphi=-S\delta C/(S^2+C^2)=-\frac{\varepsilon}{2}\sin\varphi\,(1/V+\cos\varphi)$。主项由 $\cos\varphi$ 变为 $\sin\varphi$，即波纹相位平移四分之一周期；幅度同为约 $\varepsilon/(2V)$。
+  \item 幅度约 $\varepsilon/(2V)=0.03/0.6=0.05\,\mathrm{rad}$，是光子噪声的约 $2.5$ 倍，而且是系统波纹。实际跳变发生在哪一帧、跳几帧都不确定，误差图会随扫描变化，更难诊断。结论：测量模式必须锁定曝光。
+  \item 截掉低 4 位后 $q=16$ 个原 DN，量化噪声 $16/\sqrt{12}\approx4.6$ DN，相当于 $18$ 个电子。暗区光子噪声 $\sqrt{200}\approx14$ 电子，量化噪声已超过它，主导暗区噪声；亮区影响较小。对策：传输前做线性到平方根的压缩编码（与泊松噪声匹配），或保留全位深。
 \end{enumerate}

@@ -108,6 +108,32 @@ $g$ 的具体形式随方法而变，但诊断顺序应固定：先问光路与�
 \end{itemize}
 因此本书各章末的「对象」段都会落到相机、投影、干涉、条纹或点云误差之一，避免停在定义罗列。有数竞与统计背景时，把 $Z_d$、$\SNR$、重投影误差当成可估计的量，比背诵透镜分类表更有用。
 
+\subsection{一次端到端的数量级走查}
+
+前面的链路图是定性的。这里用一组数（数量级示意，不对应具体产品）把「光子 $\to$ 灰度 $\to$ 相位 $\to$ 视差 $\to$ 深度」从头算到尾，让后续各章的公式先有一个落脚点。每一步只用到后文会推导的结果，推导留给对应章节。
+
+\textbf{设定。} 口内结构光，工作距 $Z=15\,\mathrm{mm}$，基线 $B=8\,\mathrm{mm}$，像素焦距 $f_x=1500$ 像素，像面条纹周期 $P=16$ 像素，四步相移（$N=4$）。某像素在一帧内平均收集 $A=5000$ 个光电子，条纹调制幅 $M=2500$ 个电子，即调制度 $V=M/A=0.5$；读出噪声 $5$ 个电子。
+
+\begin{enumerate}
+  \item \textbf{灰度噪声}（第~\ref{ch:05}~章）：光子散粒噪声 $\sqrt{A}\approx71$ 个电子，与读出噪声平方和 $\sqrt{71^2+5^2}\approx71$，记 $\sigma_I\approx71$ 电子。读出噪声在亮场可以忽略。
+  \item \textbf{相位噪声}（第~\ref{ch:06}~章式~\eqref{eq:ch06-phase-noise}）：$\sigma_\varphi\approx\sqrt{2/4}\times71/2500\approx0.020\,\mathrm{rad}$。
+  \item \textbf{视差噪声}（第~\ref{ch:07}~章）：一个条纹周期对应 $2\pi$，故 $\delta d=P\sigma_\varphi/(2\pi)=16\times0.020/6.28\approx0.051$ 像素。
+  \item \textbf{深度噪声}（第~\ref{ch:07}~章式~\eqref{eq:ch07-error}）：
+  \[\delta Z=\frac{Z^2\,\delta d}{Bf_x}=\frac{225\times0.051}{12000}\,\mathrm{mm}\approx0.96\,\mu\mathrm{m}.\]
+\end{enumerate}
+
+这个不到 $1\,\mu\mathrm{m}$ 的结果是\emph{理想随机项}。它成立需要三个前提：调制度确实有 $0.5$（物体在景深内、无强环境光、无严重次表面散射）；噪声只有散粒和读出两项（无饱和、无曝光漂移）；标定无偏。任一前提破坏，误差会以系统项的形式出现，而且常常比这个数大一个数量级（第~\ref{ch:10}~章的预算表）。走查的用处正在于此：先知道「物理上最好能有多好」，再把实测误差与之对比，差出来的部分就是要找的系统项。
+
+\subsection{量纲检查：三种单位不能混}
+
+重建代码里最常见的低级错误不是公式错，而是单位错。全书反复出现三类量：
+\begin{itemize}
+  \item \textbf{长度}：毫米或微米（$Z$、$B$、$f$、像元间距 $p$）；
+  \item \textbf{像素}：$f_x$、$P$、$\delta u$、$\delta d$、主点 $c_x$；
+  \item \textbf{弧度}：$\varphi$、$\sigma_\varphi$、交会角。
+\end{itemize}
+\begin{sloppypar}每个公式在写进代码前，都值得做一次量纲核对。例如 $\delta Z=Z^2\delta d/(Bf_x)$：$\mathrm{mm}^2\cdot\mathrm{px}/(\mathrm{mm}\cdot\mathrm{px})=\mathrm{mm}$，正确；若把 $f$（毫米）误代入 $f_x$（像素），结果会差一个像元间距的倒数，即数百倍。C++ 实现中可以用强类型包装（为毫米、像素、弧度各定义一个类型）让编译器替你检查；CUDA 核函数里至少应在变量名上带单位后缀（如 \texttt{z\_mm}、\texttt{d\_px}）。\end{sloppypar}
+
 \section{限度}
 \label{sec:ch00-limits}
 
@@ -143,6 +169,10 @@ $g$ 的具体形式随方法而变，但诊断顺序应固定：先问光路与�
   \item \textbf{（概念）} 灰度图像很亮，是否意味着辐照度 $E$ 一定高？举一个反例场景（涉及曝光或增益）。
   \item \textbf{（地图）} 若不看波动光学，直接做结构光相位，会缺哪类「限度」认知？指出本书哪一章补上。
   \item \textbf{（计算直觉）} 某系统深度误差粗估 $\delta Z \approx k/\SNR$。若 $\SNR$ 从 $20$ 升到 $40$（线性比），$k$ 不变，$\delta Z$ 如何变？这能否代替几何标定改进？为何？
+  \item \textbf{（计算）} 沿用「端到端数量级走查」的设定，但物体位于景深边缘，调制幅降为 $M=500$ 个电子（$A$ 不变）。重算 $\sigma_\varphi$、$\delta d$ 与 $\delta Z$，并说明哪一步变化最大。
+  \item \textbf{（计算）} 同一设定下，若环境光使每帧平均电子数增加到 $A=15000$，而 $M$ 仍为 $2500$。$V$ 变为多少？深度随机误差变为多少？
+  \item \textbf{（C++/CUDA 实践）} 一段重建代码的输出深度整体大了约 $500$ 倍，但形状正确。按「量纲检查」小节，最可能把哪个量代错了？如何在代码层面防止再犯？
+  \item \textbf{（医学重建）} 用同一条链路的思路，列出把结构光用于体表（如面部或伤口）三维重建时，相比口内场景，哪两个环节的数值会明显不同，并说明方向（变大还是变小）。
 \end{enumerate}
 
 \section{习题讲解}
@@ -155,4 +185,8 @@ $g$ 的具体形式随方法而变，但诊断顺序应固定：先问光路与�
   \item 否。提高模拟增益或延长曝光可使灰度饱和，而场景 $E$ 未变；或 tonemap/gamma 改变灰度。灰度是相机响应后的数字量。
   \item 缺少干涉/衍射/分辨率与条纹可辨的限度，对应 \chapref{ch:03}（及 \chapref{ch:06} 的相位实践）。
   \item $\SNR$ 加倍则 $\delta Z$ 减半。不能代替标定：系统偏差（错误的 $K$ 或畸变）不随 $\SNR$ 消失；$\SNR$ 主要压随机误差。
+  \item $\sigma_I$ 仍约 $71$ 电子；$\sigma_\varphi=0.707\times71/500\approx0.10\,\mathrm{rad}$；$\delta d=16\times0.10/6.28\approx0.26$ 像素；$\delta Z=225\times0.26/12000\,\mathrm{mm}\approx4.8\,\mu\mathrm{m}$。变化发生在相位一步：$M$ 降为五分之一，后续各步线性传递。
+  \item $V=2500/15000\approx0.17$。$\sigma_I\approx\sqrt{15000}\approx122$ 电子，$\sigma_\varphi=0.707\times122/2500\approx0.035\,\mathrm{rad}$，$\delta d\approx0.088$ 像素，$\delta Z\approx1.7\,\mu\mathrm{m}$。环境光不增加调制，只增加噪声；若它还导致饱和，后果更严重。
+  \item 最可能把毫米焦距 $f$ 当成像素焦距 $f_x$ 用在 $Z=Bf_x/d$ 里，或把视差的像素值当毫米。若 $p=3\,\mu\mathrm{m}$，$f_x/f=1/p\approx333$ 每毫米，量级吻合。对策：长度、像素、弧度用不同类型或至少统一后缀命名，换算只在一个函数里做（$f_x=f/p$），并为该函数写单元测试。
+  \item 工作距与视场：体表扫描工作距常为数百毫米，$Z^2$ 放大使同样 $\delta d$ 对应的 $\delta Z$ 大得多（变大）；材料：皮肤次表面散射强、调制度低于牙釉质，$V$ 下降使 $\sigma_\varphi$ 变大。另一方面景深要求相对放宽，离焦损失可能变小。
 \end{enumerate}

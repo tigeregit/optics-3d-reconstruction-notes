@@ -103,6 +103,56 @@ $D$ 为孔径。物镜侧常用数值孔径 $\NA=n\sin\alpha$；瑞利分辨距�
 
 相机曝光时间 $\tau$ 内若光程差或条纹相位因振动漂移 $\Delta\varphi(\tau)$，等价于对 $\cos\varphi$ 做时间平均，有效 $V$ 再乘一个衰减因子。手持口内扫描的微颤、投影风扇、地板振动，都会在高倍率、长相干架构里变成可见度杀手。短曝光提高瞬时锐度，但掉 $\SNR$（第~\ref{ch:05}~章）；脉冲照明与全局快门是光学–电子协同手段。
 
+\subsection{推导：双光束干涉式的中间步骤}
+
+式~\eqref{eq:ch03-twobeam} 直接给出了结果，这里补上中间步，并写出不等强度时的可见度。设两束光在观察点的复振幅为 $U_1=\sqrt{I_1}\,e^{i\varphi_1}$、$U_2=\sqrt{I_2}\,e^{i\varphi_2}$（同偏振、单色）。探测器只响应强度的时间平均：
+\[
+  I=\langle|U_1+U_2|^2\rangle=I_1+I_2+2\sqrt{I_1I_2}\,\langle\cos(\varphi_1-\varphi_2)\rangle .
+\]
+若两束完全相干，$\varphi=\varphi_1-\varphi_2$ 恒定，平均号可去掉；部分相干时平均值缩小为 $|\gamma|\cos\varphi$，即式~\eqref{eq:ch03-twobeam}。由此极大、极小值为 $I_1+I_2\pm2\sqrt{I_1I_2}|\gamma|$，代入可见度定义：
+\begin{equation}
+  V=\frac{2\sqrt{I_1I_2}}{I_1+I_2}\,|\gamma| .
+  \label{eq:ch03-visibility-unequal}
+\end{equation}
+三个条件决定 $V$：强度比、相干度、偏振（两束偏振正交时干涉项为零，第~\ref{ch:04}~章）。例：$I_1:I_2=9:1$、$|\gamma|=1$，$V=2\times3/10=0.6$；即使强度相差九倍，可见度仍有 $0.6$，干涉对强度比并不敏感。
+
+\textbf{叠加非相干背景。} 结构光的「条纹」虽然不是两束干涉产生的，但同一套语言适用：图案 $A(1+V\cos\varphi)$ 上再叠加与图案无关的背景 $A_{\mathrm{bg}}$（环境光、散射光），有
+\[
+  V'=\frac{V\,A}{A+A_{\mathrm{bg}}}.
+\]
+背景与条纹平均亮度相当时，可见度直接减半。这是后文所有「环境光降低对比度」论述的出发点。
+
+\subsection{例：一幅口内条纹在通带中的位置}
+
+用数把「条纹要落在系统通带内」落到具体频率上（数量级示意）：像面条纹周期 $P=16$ 像素，像元 $p=3\,\mu\mathrm{m}$，放大率 $|m|=0.4$，波长 $450\,\mathrm{nm}$，工作 F 数 $N_F=8$。
+\begin{enumerate}
+  \item 像面条纹周期 $16\times3=48\,\mu\mathrm{m}$，像面空间频率 $\xi=1/0.048\approx20.8$ 周期/毫米。
+  \item 物面条纹周期 $48/0.4=120\,\mu\mathrm{m}$，即物面约 $8.3$ 周期/毫米。
+  \item 像方有效 F 数 $N_F(1+|m|)=11.2$，非相干衍射截止 $\xi_c=1/(\lambda N_F(1+|m|))\approx1/(0.45\times10^{-3}\times11.2)\approx198$ 周期/毫米。
+  \item 归一化频率 $\xi/\xi_c\approx0.105$，衍射极限 $\MTF$ 约 $0.87$（第~\ref{ch:08}~章式~\eqref{eq:ch08-diffmtf}）。
+  \item 采样：奈奎斯特频率 $1/(2p)\approx167$ 周期/毫米，条纹远低于它，每周期 $16$ 个采样点。
+\end{enumerate}
+结论：焦面上这组条纹远离衍射与采样极限，限制它的不是衍射，而是离焦与材料散射（第~\ref{ch:08}~章）。若把 $P$ 降到 $4$ 像素，$\xi$ 升到 $83$ 周期/毫米，衍射 $\MTF$ 降至约 $0.48$，同时每周期只剩 $4$ 个采样点，像元积分本身也会把调制压低（像元 $\MTF$ 约 $0.9$）；再叠加离焦，调制度可能崩溃。
+
+\subsection{相干长度对照}
+
+把式~\eqref{eq:ch03-coherence-length} 用在常见光源上（数量级示意，实际以光谱实测为准）：
+\begin{center}
+\small
+\begin{tabular}{@{}lccc@{}}
+  \toprule
+  光源 & 中心波长 & 有效谱宽 & $\ell_c\sim\lambda^2/\Delta\lambda$ \\
+  \midrule
+  白光 LED & $550\,\mathrm{nm}$ & $\sim100\,\mathrm{nm}$ & $\sim3\,\mu\mathrm{m}$ \\
+  蓝光 LED & $450\,\mathrm{nm}$ & $\sim20\,\mathrm{nm}$ & $\sim10\,\mu\mathrm{m}$ \\
+  超辐射发光二极管 & $840\,\mathrm{nm}$ & $\sim50\,\mathrm{nm}$ & $\sim14\,\mu\mathrm{m}$ \\
+  多纵模激光二极管 & $650\,\mathrm{nm}$ & $\sim1\,\mathrm{nm}$ & $\sim0.4\,\mathrm{mm}$ \\
+  单纵模激光 & $633\,\mathrm{nm}$ & $\lesssim10^{-3}\,\mathrm{nm}$ & $\gtrsim0.4\,\mathrm{m}$ \\
+  \bottomrule
+\end{tabular}
+\end{center}
+读法：牙面粗糙度、釉质层内的光程差在微米到百微米量级。LED 的 $\ell_c$ 小于这些光程差，散射光之间难以干涉，散斑弱；激光的 $\ell_c$ 远大于它们，散射光彼此相干，形成散斑（第~\ref{ch:04}~章）。超辐射发光二极管正好落在 OCT 需要的「十余微米」量级（第~\ref{ch:09}~章）。
+
 \section{限度}
 \label{sec:ch03-limits}
 
@@ -139,6 +189,10 @@ $D$ 为孔径。物镜侧常用数值孔径 $\NA=n\sin\alpha$；瑞利分辨距�
   \item \textbf{（重建场景）} 提高投影条纹频率后，中心对比度尚可、视场边缘条纹几乎消失。更可能是畸变模型错误，还是边缘 $\MTF$/相对孔径问题？给出检查顺序。
   \item \textbf{（重建场景）} 口内扫描沟底相位噪声大、牙尖正常。用 $Z_d$、$\PSF$、$V$ 写四步诊断。
   \item \textbf{（综合）} 激光照明 $V$ 很高但点云出现颗粒状抖动；LED 照明更平滑但对比度略低。这分别指向哪类波动/相干现象？（散斑细节见第~\ref{ch:04}~章。）
+  \item \textbf{（推导）} 从 $I=\langle|U_1+U_2|^2\rangle$ 出发，推出式~\eqref{eq:ch03-visibility-unequal}。若两束偏振夹角为 $\theta$，可见度如何变化？
+  \item \textbf{（计算）} 投影条纹在相机所见调制度 $V=0.6$。诊室灯光使背景 $A_{\mathrm{bg}}=0.5A$，求 $V'$。若改用窄带滤光片把背景降为原来的十分之一，$V'$ 变为多少？
+  \item \textbf{（口扫场景）} 正文通带例中，若 $N_F$ 从 $8$ 改为 $16$，求新的衍射截止频率与 $P=16$ 像素条纹处的衍射 $\MTF$（可用 $\MTF\approx1-1.27\,\xi/\xi_c$ 的小频率近似）。衍射是否成为瓶颈？
+  \item \textbf{（医学重建）} 用相干长度对照表解释：为何 OCT 选超辐射发光二极管而不用单纵模激光，而结构光投影多用 LED？
 \end{enumerate}
 
 \section{习题讲解}
@@ -152,4 +206,8 @@ $D$ 为孔径。物镜侧常用数值孔径 $\NA=n\sin\alpha$；瑞利分辨距�
   \item 更优先查边缘照度、斜光束与局部离焦导致的 $\MTF$ 下降，以及相对孔径；畸变造成几何弯曲但不必先「消灭对比度」。顺序：看原图边缘 $V(u,v)$ → 查对焦场曲 → 再查曝光与投影均匀性 → 最后才怀疑纯几何标定。
   \item (1) 沟底是否超出 $Z_d$；(2) 局部 $\PSF$ 是否明显宽于牙尖；(3) 条纹局部 $V$ 是否塌；(4) 再查运动模糊与湿润高反（光度/偏振）。先光学后算法。
   \item 激光：高相干 → 粗糙面散斑，相位/匹配出现颗粒噪声。LED：较短相干、较少散斑，但可能较低 $V$ 或较低通量。需在散斑与对比度之间做光源选型折中。
+  \item $|U_1+U_2|^2=I_1+I_2+2\sqrt{I_1I_2}\cos(\varphi_1-\varphi_2)$；时间平均把余弦换成 $|\gamma|\cos\varphi$；极值 $I_1+I_2\pm2\sqrt{I_1I_2}|\gamma|$，代入 $V=(I_{\max}-I_{\min})/(I_{\max}+I_{\min})$ 即得。偏振夹角 $\theta$ 时只有平行分量干涉，干涉项乘 $\cos\theta$，故 $V$ 再乘 $|\cos\theta|$；正交时 $V=0$。
+  \item $V'=0.6/(1+0.5)=0.40$。背景降为 $0.05A$ 时 $V'=0.6/1.05\approx0.57$。窄带滤光片配合窄带光源是恢复可见度最便宜的手段之一。
+  \item $\xi_c=1/(0.45\times10^{-3}\times22.4)\approx99$ 周期/毫米；$\xi/\xi_c\approx0.21$，$\MTF\approx1-1.27\times0.21\approx0.73$（精确式约 $0.74$）。仍不是瓶颈，但衍射损失已从约 $13\%$ 升至约 $27\%$；更细的条纹会更快受限。
+  \item OCT 靠相干门定位深度，轴向分辨率约为相干长度，需要 $\ell_c$ 在十微米左右：超辐射发光二极管合适，单纵模激光的 $\ell_c$ 太长，不能分层。结构光只需投影图案的强度分布，不需要干涉，长相干反而在粗糙面上产生散斑，所以多用 LED。
 \end{enumerate}
