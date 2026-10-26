@@ -6,7 +6,7 @@
 
 ## 状态
 
-大纲已确认（见 `docs/OUTLINE.md`）。Round~A（ch00–ch02）已写正文；ch03–ch10 仍为 stub，待后续 Round。
+大纲已确认（见 `docs/OUTLINE.md`）。Round~A（ch00–ch02）、Round~B（ch03–ch05）已写正文；ch06–ch10 仍为 stub。
 
 ## 结构
 
@@ -31,4 +31,5 @@
 
 ```bash
 /workspace/engineering-cybernetics-harness/.venv/bin/python scripts/gen_figs_roundA.py
+/workspace/engineering-cybernetics-harness/.venv/bin/python scripts/gen_figs_roundB.py
 ```
