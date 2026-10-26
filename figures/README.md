@@ -14,8 +14,8 @@
 | `fig-fringe-phase.pdf` | 条纹与相位 | ch06 | 已生成 |
 | `fig-dmd-concept.pdf` | DMD/LCoS 概念 | ch06 | 已生成 |
 | `fig-stereo-triangulation.pdf` | 立体三角测量与光学限度 | ch07 | 已生成 |
-| `fig-mtf-curve.pdf` | MTF 曲线与模糊预算 | ch08 | 待生成 |
-| `fig-sensor-compare.pdf` | 共聚焦 / OCT / ToF 对照 | ch09 | 待生成 |
-| `fig-error-budget-map.pdf` | 光子→点云误差预算总图 | ch10 | 待生成 |
+| `fig-mtf-curve.pdf` | MTF 曲线与模糊预算 | ch08 | 已生成 |
+| `fig-sensor-compare.pdf` | 共聚焦 / OCT / ToF 对照 | ch09 | 已生成 |
+| `fig-error-budget-map.pdf` | 光子→点云误差预算总图 | ch10 | 已生成 |
 
 优先 matplotlib 矢量 PDF；中文标签可用。概念草图须在 caption 注明非精确工程图。

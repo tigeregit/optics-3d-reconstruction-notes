@@ -1,28 +1,148 @@
 \chapter{色散、色差、点扩散与 MTF}
 \label{ch:08}
 
-% TODO: 核心「为什么要懂」— 重建精度与模糊预算
-
 \section{效果}
 \label{sec:ch08-effect}
-% TODO: 读完本章应能回答什么（条目化，落到重建场景）
+
+读完本章，你应能：
+\begin{enumerate}
+  \item 说明材料色散如何产生轴向色差与垂轴色差，以及为何结构光常选单色或窄带光源；
+  \item 从 $\PSF$ 出发定义 $\mathrm{OTF}$ 与 $\MTF$，写出衍射限截止频率，并把离焦、像元采样等因素作为 $\MTF$ 级联相乘；
+  \item 把「投影镜头 $\to$ 物面 $\to$ 相机镜头 $\to$ 像元」的链路 $\MTF$ 与第~\ref{ch:06}~章的调制幅 $M$ 和相位噪声 $\sigma_\varphi$ 联系起来；
+  \item 解释边缘与高曲率处混合像素的成因；
+  \item 为一台结构光设备选择条纹周期并做一份模糊预算。
+\end{enumerate}
 
 \section{原理}
 \label{sec:ch08-principle}
-% TODO: 主流光学教程习惯下的够用展开；公式适度
+
+\subsection{色散与色差}
+
+透镜材料的折射率随波长变化，$n=n(\lambda)$，称为色散。可见光波段中，短波长折射率通常更大，因此薄透镜的焦距
+\[
+  \frac{1}{f(\lambda)}=\bigl(n(\lambda)-1\bigr)\Bigl(\frac{1}{r_1}-\frac{1}{r_2}\Bigr)
+\]
+随波长变化：蓝光焦距短于红光。由此产生两类色差：
+\begin{itemize}
+  \item \textbf{轴向色差}：不同波长的像面沿光轴前后错开。宽带照明下，任何一个像面都只对某一波段清晰，其余波段弥散，等效于叠加了波长相关的离焦。
+  \item \textbf{垂轴色差（倍率色差）}：不同波长的放大率不同，视场边缘的像点按颜色径向错开。它在几何上等价于\emph{波长相关的径向畸变}（第~\ref{ch:02}~章）。
+\end{itemize}
+消色差设计用不同色散的玻璃组合，使两个波长焦点重合，剩余的二级光谱仍存在 \citep{HechtOptics}。
+
+\textbf{对重建的含义。} 若相机按白光或某一波长标定，而工作时使用另一波长，焦距与畸变系数都会偏移，第~\ref{ch:07}~章已说明这会进入尺度项与畸变项。彩色编码结构光同时使用多个波长，每个颜色通道实际是一台内参略有不同的相机。
+
+\textbf{单色源与带通。} 激光或窄带 LED 加带通滤光片可把色差压到近乎可忽略，并拒绝环境光（提高第~\ref{ch:05}~章的 $\SNR$）。代价：激光相干性高，带来散斑（第~\ref{ch:03}~章、第~\ref{ch:04}~章）；LED 带宽数十纳米，相干长度短，散斑弱，但仍有残余色差。口内设备常用蓝光 LED：短波长衍射截止更高、在牙体中穿透更浅（第~\ref{ch:06}~章），且带宽适中。
+
+\subsection{PSF、OTF 与 MTF}
+
+线性、空间不变近似下，像是物与 $\PSF$ 的卷积：
+\begin{equation}
+  I_{\mathrm{img}}(x,y)=\bigl(I_{\mathrm{obj}}*h\bigr)(x,y),
+  \label{eq:ch08-conv}
+\end{equation}
+$h$ 为强度 $\PSF$。在频域中卷积变为相乘。设空间频率为 $(\xi,\eta)$（单位：周期/毫米），则
+\begin{equation}
+  \tilde I_{\mathrm{img}}(\xi,\eta)=H(\xi,\eta)\,\tilde I_{\mathrm{obj}}(\xi,\eta),\qquad
+  H=\frac{\mathcal F\{h\}}{\mathcal F\{h\}(0,0)}.
+  \label{eq:ch08-otf}
+\end{equation}
+$H$ 称为光学传递函数（OTF），其模 $|H|$ 即 $\MTF$，辐角为相位传递函数（PTF）。$\MTF$ 的物理意义直接：一个空间频率为 $\xi$、调制度为 $\gamma_{\mathrm{in}}$ 的正弦图案经过系统后，调制度变为 $\MTF(\xi)\gamma_{\mathrm{in}}$。这正是结构光关心的量。
+
+\textbf{衍射限 MTF。} 非相干照明、圆形光瞳、无像差时 \citep{GoodmanFourierOptics}：
+\begin{equation}
+  \MTF(\xi)=\frac{2}{\pi}\Bigl[\arccos\hat\xi-\hat\xi\sqrt{1-\hat\xi^{2}}\Bigr],\qquad
+  \hat\xi=\frac{\xi}{\xi_c},\qquad \xi_c=\frac{1}{\lambda N_F},
+  \label{eq:ch08-diffmtf}
+\end{equation}
+$N_F$ 为工作 F 数（像方）。$\xi_c$ 以上 $\MTF$ 为零，任何信息都传不过去。例：$\lambda=450\,\mathrm{nm}$、$N_F=8$ 时 $\xi_c\approx278\,$周期/毫米；相机像元 $3\,\mu\mathrm{m}$ 的奈奎斯特频率约 $167\,$周期/毫米。
+
+PTF 的非零部分（彗差等非对称像差造成）对结构光尤其危险：它让条纹整体平移，直接变成相位偏置，而不是对比度损失。
+
+\subsection{MTF 级联}
+
+若干独立的模糊环节串联时，总 $\PSF$ 为各 $\PSF$ 的卷积，总 $\MTF$ 为各 $\MTF$ 的乘积：
+\begin{equation}
+  \MTF_{\mathrm{sys}}(\xi)=\MTF_{\mathrm{diff}}(\xi)\cdot\MTF_{\mathrm{aber}}(\xi)\cdot\MTF_{\mathrm{defocus}}(\xi)\cdot\MTF_{\mathrm{pix}}(\xi)\cdots
+  \label{eq:ch08-cascade}
+\end{equation}
+\begin{itemize}
+  \item \textbf{离焦}：几何近似下弥散圆直径 $c$（第~\ref{ch:01}~章）对应的均匀圆盘 $\PSF$，其 $\MTF=2J_1(\pi c\xi)/(\pi c\xi)$，在 $\xi\approx1.22/c$ 处首次过零并出现\emph{对比度反转}（负值区相位翻转 $\pi$）。
+  \item \textbf{像元孔径}：宽 $p$ 的方形像元相当于矩形积分，$\MTF_{\mathrm{pix}}=|\operatorname{sinc}(p\xi)|$；在奈奎斯特频率 $1/(2p)$ 处约为 $0.64$。
+  \item \textbf{其他}：运动模糊（矩形核，沿运动方向）、传感器串扰、图像压缩等，皆可按同样方式相乘。
+\end{itemize}
+级联的直观结论：系统 $\MTF$ 永远不高于最差的一环，并且多个「看起来都还行」的环节相乘后会很快变差（图~\ref{fig:ch08-mtf}）。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.98\textwidth]{fig-mtf-curve.pdf}
+  \caption{左：衍射、离焦与像元 MTF 级联；右：链路 MTF 与相对深度噪声随条纹频率变化，存在最优区间（概念草图，非精确工程图）。}
+  \label{fig:ch08-mtf}
+\end{figure}
+
+\subsection{链路 MTF、调制幅与相位噪声}
+
+结构光中条纹经过两次成像：投影镜头把调制器上的图案成像到物面，相机镜头再把物面成像到传感器。物面的反射（含次表面散射）在中间又乘上一个「材料 $\MTF$」。设投影器件上条纹调制度为 $\gamma_0$，平均灰度为 $A$，物面条纹频率为 $\xi$，则相机所见调制幅约为
+\begin{equation}
+  M(\xi)\approx A\,\gamma_0\,\MTF_{\mathrm{proj}}(\xi)\,\MTF_{\mathrm{mat}}(\xi)\,\MTF_{\mathrm{cam}}(\xi).
+  \label{eq:ch08-chain}
+\end{equation}
+代入第~\ref{ch:06}~章式~\eqref{eq:ch06-phase-noise}，$\sigma_\varphi\approx\sqrt{2/N}\,\sigma_I/M$。相位误差折算为物面横向位置误差为 $\delta x=\sigma_\varphi/(2\pi\xi)$，再经第~\ref{ch:07}~章的三角关系变成深度误差。于是
+\begin{equation}
+  \delta Z\ \propto\ \frac{1}{\xi\,\MTF_{\mathrm{link}}(\xi)}.
+  \label{eq:ch08-tradeoff}
+\end{equation}
+提高条纹频率 $\xi$ 一方面使每弧度相位对应的位移更小（分母中的 $\xi$），另一方面使 $\MTF_{\mathrm{link}}$ 下降。二者乘积在某个中间频率处取最大，即深度噪声最小（图~\ref{fig:ch08-mtf} 右）。这给出选择条纹周期的光学依据，而不是「越密越好」。
+
+\subsection{混合像素}
+
+在深度不连续的边缘（牙齿轮廓、器械边缘），一个像元的 $\PSF$ 覆盖区域同时包含前景与背景。由于前后景的条纹相位不同，像元接收到的是两个复相量 $M_1e^{i\varphi_1}$ 与 $M_2e^{i\varphi_2}$ 按面积与亮度加权之和，求出的相位介于两者之间（甚至因相量抵消而 $M$ 很小），重建出漂浮在前后景之间的「飞点」。
+高曲率表面虽然连续，但 $\PSF$ 覆盖区域内相位非线性变化，同样产生偏置，表现为尖锐边缘被「磨圆」、窄槽被「填浅」。$\PSF$ 越宽（离焦、低 $\MTF$），受影响的带宽越大。诊断特征：调制幅 $M$ 在边缘处骤降；相位梯度异常大。
 
 \section{限度}
 \label{sec:ch08-limits}
-% TODO: 假设边界、失效模式、与重建误差的关系
+
+\begin{itemize}
+  \item 空间不变假设：真实镜头的 $\PSF$ 随视场与深度变化，$\MTF$ 应在多个视场点、多个深度分别给出；本章的单一曲线只是代表。
+  \item 非相干成像假设：激光照明下系统对复振幅线性，传递函数是相干传递函数（截止频率为非相干的一半），且出现散斑。
+  \item 级联相乘只对相互独立、线性的模糊环节成立；传感器饱和、伽马、二值化之后不再适用。
+  \item 几何离焦 $\MTF$ 在弥散圆接近衍射斑时失效，需用波像差计算。
+  \item 「材料 $\MTF$」是对次表面散射的粗略等效，忽略了它带来的相位偏移（第~\ref{ch:06}~章）。
+\end{itemize}
 
 \section{对象}
 \label{sec:ch08-object}
-% TODO: 必须落到相机/投影/干涉/条纹/重建误差中的具体场景
+
+\textbf{选条纹周期。} 设口内设备（数量级示意）：相机像元 $3\,\mu\mathrm{m}$、放大率 $0.3$，则物面像元约 $10\,\mu\mathrm{m}$；工作 F 数 $8$、蓝光。物面上条纹周期 $P_{\mathrm{obj}}$ 若取 $0.1\,\mathrm{mm}$（$10\,$周期/毫米），相当于每周期约 $10$ 个物面像元，像元 $\MTF$ 接近 $1$，衍射 $\MTF$ 仍高；但景深边缘弥散圆若达 $60\,\mu\mathrm{m}$（物面），离焦 $\MTF=2J_1(x)/x$ 在 $x=\pi c\xi\approx1.9$ 处约为 $0.6$，投影与相机两侧同时离焦则约 $0.36$，再叠加牙体散射，$M$ 可能只剩焦面处的三分之一左右。于是常见做法是：以\emph{景深边缘}而非焦面处的链路 $\MTF$ 来选周期，让边缘处 $M$ 仍高于展开可靠所需的阈值。
+
+\textbf{模糊预算表。} 把每个环节在选定频率处的 $\MTF$ 列出（焦面 / 景深边缘两列）：投影衍射、投影离焦、材料、相机衍射、相机离焦、像元、运动。乘积给出 $M$ 的预期范围，再用式~\eqref{eq:ch06-phase-noise} 得到 $\sigma_\varphi$，用第~\ref{ch:07}~章的式~\eqref{eq:ch07-error} 得到 $\delta Z$。若结果超标，可从表中直接看出最差的一环：是离焦（需要更大景深或更小孔径）、是运动（需要更短曝光）、还是材料（需要更短波长或更低频率）。
+
+\textbf{色差的实际影响。} 白光相机配蓝光投影：标定若用白光棋盘格，焦距与畸变系数会与蓝光工作状态略有差别，平面重建出现轻微碗形或尺度偏差。对策是用工作波长的照明进行标定，或在镜头设计中对工作波段做色差校正。
+
+\section*{本章收束}
+色散让焦距与畸变随波长变化，单色或窄带光源是结构光的常见选择。$\MTF$ 把模糊量化为「每个空间频率剩下多少调制度」，各环节级联相乘。调制幅 $M$ 是链路 $\MTF$ 的直接结果，因此条纹周期存在由光学决定的最优区间。边缘与高曲率处的混合像素来自 $\PSF$ 的有限宽度，是不可平均的系统误差。
 
 \section{习题}
 \label{sec:ch08-exercises}
-% TODO: 4–8 题（概念 + 计算 + 重建场景设计/诊断）；至少一半对应相机/投影/条纹/点云误差
+
+\begin{enumerate}
+  \item \textbf{（计算）} $\lambda=450\,\mathrm{nm}$、$N_F=5.6$ 与 $N_F=11$ 时衍射截止频率各为多少？对 $2.4\,\mu\mathrm{m}$ 像元，哪种情况下衍射成为奈奎斯特频率处的主导限制？
+  \item \textbf{（计算）} 某频率处投影 $\MTF=0.7$、材料 $0.6$、相机 $0.8$、像元 $0.9$，投影调制度 $\gamma_0=0.9$，平均灰度 $A=120$。估算调制幅 $M$；若 $\sigma_I=2$、四步相移，求 $\sigma_\varphi$。
+  \item \textbf{（重建场景）} 同一台设备在焦面处精度很好，在景深边缘噪声增加三倍以上，且条纹越密越明显。用 $\MTF$ 级联解释。
+  \item \textbf{（重建场景）} 牙齿轮廓边缘一圈出现漂浮点，位于牙面与背景之间。原因是什么？给出基于 $M$ 和相位梯度的剔除规则。
+  \item \textbf{（重建场景）} 换用另一颜色的投影光源后，未重新标定，平面重建出现轻微碗形。解释并给出对策。
+  \item \textbf{（设计）} 由式~\eqref{eq:ch08-tradeoff}，若 $\MTF_{\mathrm{link}}(\xi)\approx1-\xi/\xi_0$（线性近似），求使 $\delta Z$ 最小的 $\xi$。
+  \item \textbf{（诊断）} 相位误差图在某些区域条纹相位整体反转了约 $\pi$，而调制幅很低。可能是离焦 $\MTF$ 的什么现象？
+\end{enumerate}
 
 \section{习题讲解}
 \label{sec:ch08-solutions}
-% TODO: 章末讲解（不另开总附录）
+
+\begin{enumerate}
+  \item $\xi_c=1/(\lambda N_F)$：$N_F=5.6$ 时约 $397$，$N_F=11$ 时约 $202\,$周期/毫米。$2.4\,\mu\mathrm{m}$ 像元奈奎斯特约 $208\,$周期/毫米。$N_F=11$ 时截止频率已低于奈奎斯特，衍射主导。
+  \item 链路 $\MTF=0.7\times0.6\times0.8\times0.9\approx0.30$；$M\approx120\times0.9\times0.30\approx33$。$\sigma_\varphi\approx\sqrt{2/4}\times2/33\approx0.043\,\mathrm{rad}$。
+  \item 景深边缘离焦 $\MTF$ 大幅下降，投影与相机两侧同时离焦，且乘积随频率下降更快；$M$ 下降导致 $\sigma_\varphi$ 上升。条纹越密，离焦 $\MTF$ 越低，效应越强。
+  \item 混合像素：$\PSF$ 跨越深度不连续，前后景相量叠加，求出中间相位。规则：剔除 $M$ 低于阈值（如局部中值的一定比例）或相位梯度超过可能表面坡度上限的像素；或检查邻域深度跳变后剔除边缘带。
+  \item 轴向与垂轴色差：焦距与畸变系数随波长变化，标定参数不再匹配，残余畸变表现为碗形。对策：以工作波长重新标定，或使用色差校正的镜头。
+  \item $\xi\,\MTF=\xi-\xi^2/\xi_0$ 在 $\xi=\xi_0/2$ 时取最大，此时 $\delta Z$ 最小。
+  \item 离焦 $\MTF$ 过零后的负值区：对比度反转，相位翻转 $\pi$，同时幅值小。说明该区域严重离焦，应降低条纹频率或剔除。
+\end{enumerate}
