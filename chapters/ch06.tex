@@ -116,6 +116,62 @@ $N$ 步相移还有一个好处：若相机或投影存在伽马非线性，谐�
   \label{fig:ch06-dmd}
 \end{figure}
 
+\subsection{推导：$N$ 步相移的最小二乘解}
+
+式~\eqref{eq:ch06-nstep} 的中间步如下。把式~\eqref{eq:ch06-fringe} 展开为对未知量线性的形式：
+\[
+  I_k=A+a\cos\delta_k+b\sin\delta_k,\qquad a=M\cos\varphi,\quad b=-M\sin\varphi .
+\]
+三个未知数 $(A,a,b)$，$N\ge3$ 个方程。最小化 $\sum_k(I_k-A-a\cos\delta_k-b\sin\delta_k)^2$，正规方程的系数矩阵由 $\sum1$、$\sum\cos\delta_k$、$\sum\cos^2\delta_k$ 等组成。等间隔相移 $\delta_k=2\pi k/N$ 时有
+\begin{gather*}
+  \sum_k\cos\delta_k=\sum_k\sin\delta_k=\sum_k\sin\delta_k\cos\delta_k=0,\\
+  \sum_k\cos^2\delta_k=\sum_k\sin^2\delta_k=\frac N2 ,
+\end{gather*}
+（$N\ge3$ 时成立；$N=2$ 时 $\sum\cos^2=2$、$\sum\sin^2=0$，$b$ 不可解，这就是至少三步的原因。）矩阵对角化，解直接读出：
+\[
+  A=\frac1N\sum_kI_k,\qquad a=\frac2N\sum_kI_k\cos\delta_k,\qquad b=\frac2N\sum_kI_k\sin\delta_k .
+\]
+于是 $\varphi=\operatorname{atan2}(-b,a)$，$M=\sqrt{a^2+b^2}$，即式~\eqref{eq:ch06-nstep}、\eqref{eq:ch06-AM}。这组正交性同时说明了：相移不等间隔（例如投影器件的灰度非线性导致实际相移偏离 $2\pi k/N$）时交叉项不为零，$A$ 会泄漏进相位。
+
+\textbf{噪声。} 每帧加独立噪声 $n_k$（方差 $\sigma_I^2$），则 $a$、$b$ 的噪声方差都是 $(2/N)^2\cdot(N/2)\sigma_I^2=2\sigma_I^2/N$，且互不相关。相位误差是 $(a,b)$ 噪声在垂直于相量方向上的分量除以 $M$，故 $\sigma_\varphi=\sqrt{2/N}\,\sigma_I/M$，即式~\eqref{eq:ch06-phase-noise}；$M$ 的噪声标准差同为 $\sqrt{2/N}\,\sigma_I$。适用条件：$M\gg\sigma_I$（小噪声线性化）；$M$ 接近噪声水平时相位分布变宽并趋于均匀，线性公式失效。
+
+\subsection{推导：伽马为什么在三步时这么要紧}
+
+投影—相机链路的灰度非线性（伽马）把正弦条纹变成含谐波的周期信号：
+\[
+  I_k=A'+\sum_{n\ge1}a_n\cos\bigl(n(\varphi+\delta_k)\bigr).
+\]
+代入式~\eqref{eq:ch06-nstep} 的求和，第 $n$ 次谐波项含 $\sum_k\cos\bigl(n\delta_k\pm\delta_k\bigr)$。等间隔相移下，只有 $n\pm1\equiv0\pmod N$ 的谐波不被消去，即 $n=N-1$ 与 $n=N+1$ 次谐波会混叠到基频上。一阶近似下
+\[
+  \delta\varphi\approx\frac{a_{N+1}-a_{N-1}}{a_1}\,\sin(N\varphi),
+\]
+误差是相位的 $N$ 倍频波纹（符号依谐波相位而定）。谐波系数随阶次迅速衰减，因此 $N$ 增加一步，误差往往降一个数量级以上。
+
+\textbf{例（数量级示意）。} 投影的归一化灰度 $0.5+0.4\cos\theta$，经 $\gamma=2.2$ 的幂律后再数值求谐波系数，得到相位误差峰值：三步约 $0.23\,\mathrm{rad}$，四步约 $0.0066\,\mathrm{rad}$，六步约 $10^{-4}\,\mathrm{rad}$（对应数值仿真结果与上式一致到百分之几）。按 $P=16$ 像素、第~\ref{ch:00}~章的几何，三步的 $0.23\,\mathrm{rad}$ 对应 $\delta d\approx0.6$ 像素、深度波纹约 $11\,\mu\mathrm{m}$，是光子噪声的十倍；四步时只有约 $0.3\,\mu\mathrm{m}$。若伽马已被预校正到残余 $\gamma\approx1.1$，三步误差约 $0.022\,\mathrm{rad}$、四步约 $0.003\,\mathrm{rad}$。结论：三步方案必须做伽马校正；四步以上对伽马已相当不敏感。
+
+\subsection{推导：外差展开为什么会「跳级」}
+
+两频外差的等效周期
+\[
+  P_{\mathrm{eq}}=\frac{P_1P_2}{P_2-P_1}.
+\]
+其包裹相位差 $\varphi_{\mathrm{eq}}=\varphi_1-\varphi_2$（取模）若在全视场不超过一个周期，就是无歧义的粗相位。用它确定细相位 $\varphi_1$ 的级次：
+\[
+  k=\operatorname{round}\!\Bigl(\frac{(P_{\mathrm{eq}}/P_1)\,\varphi_{\mathrm{eq}}-\varphi_1}{2\pi}\Bigr).
+\]
+$\varphi_{\mathrm{eq}}$ 的噪声约为 $\sqrt2\sigma_\varphi$（两相位独立相减），被放大 $P_{\mathrm{eq}}/P_1$ 倍后与 $\pi$ 比较，超过 $\pi$ 就跳一级，造成一个整周期（$P_1$ 像素）的粗大误差。
+
+\textbf{例。} $P_1=16$、$P_2=18$，$P_{\mathrm{eq}}=144$，放大倍数 $9$。
+\begin{itemize}
+  \item $\sigma_\varphi=0.02\,\mathrm{rad}$：放大后约 $9\times0.028=0.25\,\mathrm{rad}$，$\pi$ 相当于约 $12\sigma$，跳级概率可忽略。
+  \item $\sigma_\varphi=0.1\,\mathrm{rad}$（低反射、暗区）：放大后约 $1.28\,\mathrm{rad}$，$\pi/1.28\approx2.45\sigma$，按高斯双侧尾概率约 $1.4\%$ 的像素跳级。
+\end{itemize}
+$1\%$ 量级的跳级像素在点云里表现为成片的「台阶」或孤立的离群点。对策：三频级联（每级放大倍数小）；用调制度 $M$ 设门限剔除低质量像素；或空间一致性校验。这也给出一个设计不等式：放大倍数 $\times\sqrt2\sigma_\varphi$ 应小于 $\pi$ 的约六分之一。
+
+\subsection{格雷码边界的误差}
+
+格雷码与相移组合时，级次来自二值图案的解码。二值边界被成像模糊（第~\ref{ch:08}~章）后，边界附近一两个像素的码值不可靠，正是在包裹相位跳变的位置。这两者不完全对齐时，就在每个周期边界出现一个像素宽的错级「毛刺」。常见做法：额外多投一帧互补图案判断边界；或把格雷码边界设计为与相位跳变错开半个周期，再用包裹相位本身修正级次。
+
 \section{限度}
 \label{sec:ch06-limits}
 
@@ -152,6 +208,11 @@ $N$ 步相移还有一个好处：若相机或投影存在伽马非线性，谐�
   \item \textbf{（重建场景）} 点云上出现沿条纹方向、间距恰为一个条纹周期深度的线状台阶。最可能是哪一步出错？如何确认？
   \item \textbf{（重建场景）} 相位误差图出现频率为条纹频率 $4$ 倍的规则波纹（四步相移）。可能原因是什么？给出两种对策。
   \item \textbf{（设计）} DMD 投影帧率 $1000$ 帧/秒（二值），相机全局快门。设计一个「二值离焦 + 时间展开」的采集序列，估计总时长，并说明手持速度 $20\,\mathrm{mm/s}$ 时的运动量。
+  \item \textbf{（推导）} 写出 $N=3$、$\delta_k=0,\,2\pi/3,\,4\pi/3$ 时 $\varphi_w$ 的显式公式，并验证它是式~\eqref{eq:ch06-nstep} 的特例。
+  \item \textbf{（推导）} 说明为何 $N$ 步相移会消去第 $2$ 至 $N-2$ 次谐波，而 $N-1$、$N+1$ 次谐波不能消去。
+  \item \textbf{（计算）} 三频外差 $P_1=16$、$P_2=18$、$P_3=21$。分别求 $P_1,P_2$ 与 $P_2,P_3$ 的等效周期；若再对两等效周期做一次外差，等效周期是多少？
+  \item \textbf{（口扫场景）} 牙龈区 $V\approx0.15$，牙面区 $V\approx0.5$，二者 $A$ 相同、$\sigma_I$ 相同。若牙面 $\sigma_\varphi=0.02\,\mathrm{rad}$，求牙龈区 $\sigma_\varphi$，并用正文外差参数估算其跳级概率量级。
+  \item \textbf{（C++/CUDA 实践）} 在 GPU 上实现 $N$ 步相移解算时，如何组织循环与访存？哪些量可以预先计算？说明为何 $A$、$M$、$\varphi$ 应在同一个核函数中输出。
 \end{enumerate}
 
 \section{习题讲解}
@@ -165,4 +226,9 @@ $N$ 步相移还有一个好处：若相机或投影存在伽马非线性，谐�
   \item 相位展开级次错一级（格雷码边界误判或多频级次误判）。确认：在包裹相位图上看台阶是否位于 $\pm\pi$ 跳变处；检查格雷码解码在边界上是否与包裹相位不同步。
   \item 伽马非线性（投影或相机），也可能是 DMD 未同步导致的灰度误差。对策：伽马标定与预失真；增加相移步数；改二值离焦；检查帧同步。
   \item 例：$3$ 幅格雷码或 $2$ 组低频 + $4$ 步高频相移，约 $7$--$12$ 帧，$7$--$12\,\mathrm{ms}$。移动 $0.14$--$0.24\,\mathrm{mm}$，相对于数十微米的精度目标很大，需要缩短序列或做运动补偿。
+  \item $\varphi_w=\operatorname{atan2}\bigl(\sqrt3(I_2-I_1),\ 2I_0-I_1-I_2\bigr)$。代入 $\sin\delta_k=(0,\tfrac{\sqrt3}2,-\tfrac{\sqrt3}2)$、$\cos\delta_k=(1,-\tfrac12,-\tfrac12)$：$-\sum I_k\sin\delta_k=\tfrac{\sqrt3}2(I_2-I_1)$，$\sum I_k\cos\delta_k=I_0-\tfrac12(I_1+I_2)$，两者同乘 $2$ 即上式。
+  \item 第 $n$ 次谐波在求和中产生 $\sum_k e^{i(n\pm1)\delta_k}$，等间隔相移下当且仅当 $n\pm1\equiv0\pmod N$ 时和为 $N$，否则为零。$2\le n\le N-2$ 时 $n\pm1\in[1,N-1]$，都被消去；$n=N\mp1$ 时 $n\pm1=N$ 不被消去。
+  \item $P_{12}=16\cdot18/2=144$；$P_{23}=18\cdot21/3=126$；$P_{\mathrm{eq}}=144\cdot126/18=1008$。可覆盖千像素量级的视场，每级放大倍数为 $9$ 和 $1008/144=7$。
+  \item $\sigma_\varphi\propto1/M=1/(VA)$，牙龈区 $\sigma_\varphi\approx0.02\times0.5/0.15\approx0.067\,\mathrm{rad}$。放大后 $9\times\sqrt2\times0.067\approx0.85\,\mathrm{rad}$，$\pi/0.85\approx3.7\sigma$，双侧尾概率约 $2\times10^{-4}$。若 $V$ 再低到 $0.1$，约为 $0.1\,\mathrm{rad}$ 情形的 $1\%$ 量级。
+  \item 每线程一个像素；$N$ 帧按平面存放（同一帧连续），使相邻线程访问连续地址、合并访存。$\sin\delta_k$、$\cos\delta_k$ 预先计算放常量内存。三个输出共享同一组累加和 $\sum I_k\cos\delta_k$、$\sum I_k\sin\delta_k$，同一核函数输出可避免重复读 $N$ 帧数据（读数据是带宽瓶颈）；$M$ 同时用作后续质量门限与外差跳级判定。
 \end{enumerate}
