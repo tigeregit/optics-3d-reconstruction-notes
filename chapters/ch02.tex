@@ -19,14 +19,20 @@
 
 相机坐标系下，点 $\mathbf{X}_c=(X,Y,Z)^\top$（$Z>0$ 在镜头前方的常见约定）先按针孔投影到归一化像平面，再乘内参。像素齐次坐标常写为
 \begin{equation}
-  \lambda\begin{pmatrix}u\\v\\1\end{pmatrix}
+  s\begin{pmatrix}u\\v\\1\end{pmatrix}
   =
   K\begin{pmatrix}X\\Y\\Z\end{pmatrix},
   \qquad
   K=\begin{pmatrix}f_x & 0 & c_x\\ 0 & f_y & c_y\\ 0&0&1\end{pmatrix},
   \label{eq:ch02-K}
 \end{equation}
-其中 $\lambda$ 为齐次尺度（此处勿与波长 $\wavelength$ 混淆；波长绝不占用此角色时写清「齐次因子」）。$f_x,f_y$ 是以像素计的焦距，近似 $f/p_x$、$f/p_y$（$f$ 为毫米焦距，$p_x,p_y$ 为像素间距）；$c_x,c_y$ 为主点，理想上接近光轴与传感器交点的像素坐标。斜歪参数（skew）在现代传感器上常可置零。
+其中 $s$ 为齐次尺度（齐次因子）。非齐次形式更直观：
+\[
+  u = f_x\frac{X}{Z}+c_x,\qquad
+  v = f_y\frac{Y}{Z}+c_y
+  \quad(Z\neq 0).
+\]
+$f_x,f_y$ 是以像素计的焦距，近似 $f/p_x$、$f/p_y$（$f$ 为毫米焦距，$p_x,p_y$ 为像素间距）；$c_x,c_y$ 为主点，理想上接近光轴与传感器交点的像素坐标。斜歪参数（skew）在现代传感器上常可置零。
 
 光学约束体现在：
 \begin{itemize}
@@ -116,7 +122,6 @@ $k_1<0$ 常对应桶形倾向，$k_1>0$ 常对应枕形倾向（符号约定因�
   \item 式~\eqref{eq:ch02-K}--\eqref{eq:ch02-dist} 是常用工程模型，不是透镜设计的完整像差展开。
   \item 可观性讨论是定性的；定量协方差依赖角点噪声模型与姿态分布，需用实际标定报告或仿真确认。
   \item 忽略畸变的「也能跑」的 $K$ 在窄视场、弱畸变镜头上可勉强；口内广角常见强畸变，此限度不可忽略。
-  \item 齐次因子与波长 $\wavelength$ 同字母时必须在文中消歧；本书正文尽量用「齐次尺度」称呼前者。
 \end{itemize}
 
 \section{对象}
@@ -132,7 +137,7 @@ $k_1<0$ 常对应桶形倾向，$k_1>0$ 常对应枕形倾向（符号约定因�
 
 
 \section*{本章收束}
-$K$ 把毫米光路接到像素；畸变在归一化平面改弯；$Z_d$ 约束哪些图能进标定；姿态设计决定可观性。重投影误差与 $\delta Z\sim Z^2\delta u/(B f_x)$ 量级把光学约束接到点云。Round~A 结束；波动与光度线索从 \chapref{ch:03} 起展开。
+$K$ 把毫米光路接到像素；畸变在归一化平面改弯；$Z_d$ 约束哪些图能进标定；姿态设计决定可观性。重投影误差与 $\delta Z\sim Z^2\delta u/(B f_x)$ 量级把光学约束接到点云。本编几何与相机部分到此；波动与光度线索从 \chapref{ch:03} 起展开。
 
 \section{习题}
 \label{sec:ch02-exercises}
