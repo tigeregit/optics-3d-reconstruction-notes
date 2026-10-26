@@ -6,13 +6,13 @@
 
 ## 状态
 
-**大纲待用户确认**（见 `docs/OUTLINE.md`）。确认前仅有章 stub（标题 + 节骨架 + 习题占位），**不写**完整章正文。
+大纲已确认（见 `docs/OUTLINE.md`）。Round~A（ch00–ch02）已写正文；ch03–ch10 仍为 stub，待后续 Round。
 
 ## 结构
 
-- `docs/OUTLINE.md` — 章目录与写章计划（冻结候选）
+- `docs/OUTLINE.md` — 章目录与写章计划
 - `STYLE.md` — 书定位、Notation Lock、写作约定
-- `chapters/` — ch00–ch10 章 TeX stub
+- `chapters/` — ch00–ch10 章 TeX
 - `figures/` — 锁定文件名配图（见 `figures/README.md`）
 - `refs/book.bib` — 文献
 - `reviews/` — 讲义·审核产出
@@ -26,3 +26,9 @@
 ```
 
 产出：`book.pdf`（需 Noto CJK SC）。
+
+## 配图脚本
+
+```bash
+/workspace/engineering-cybernetics-harness/.venv/bin/python scripts/gen_figs_roundA.py
+```
