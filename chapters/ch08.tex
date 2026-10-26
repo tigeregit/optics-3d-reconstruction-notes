@@ -22,7 +22,7 @@
 \[
   \frac{1}{f(\lambda)}=\bigl(n(\lambda)-1\bigr)\Bigl(\frac{1}{r_1}-\frac{1}{r_2}\Bigr)
 \]
-随波长变化：蓝光焦距短于红光。由此产生两类色差：
+随波长变化：蓝光焦距短于红光。（本章 $c$ 沿用第~\ref{ch:01}~章，表示弥散圆直径；第~\ref{ch:09}~章的 $c$ 表示光速。）由此产生两类色差：
 \begin{itemize}
   \item \textbf{轴向色差}：不同波长的像面沿光轴前后错开。宽带照明下，任何一个像面都只对某一波段清晰，其余波段弥散，等效于叠加了波长相关的离焦。
   \item \textbf{垂轴色差（倍率色差）}：不同波长的放大率不同，视场边缘的像点按颜色径向错开。它在几何上等价于\emph{波长相关的径向畸变}（第~\ref{ch:02}~章）。
@@ -46,7 +46,7 @@ $h$ 为强度 $\PSF$。在频域中卷积变为相乘。设空间频率为 $(\xi
   H=\frac{\mathcal F\{h\}}{\mathcal F\{h\}(0,0)}.
   \label{eq:ch08-otf}
 \end{equation}
-$H$ 称为光学传递函数（OTF），其模 $|H|$ 即 $\MTF$，辐角为相位传递函数（PTF）。$\MTF$ 的物理意义直接：一个空间频率为 $\xi$、调制度为 $\gamma_{\mathrm{in}}$ 的正弦图案经过系统后，调制度变为 $\MTF(\xi)\gamma_{\mathrm{in}}$。这正是结构光关心的量。
+$H$ 称为光学传递函数（OTF），其模 $|H|$ 即 $\MTF$，辐角为相位传递函数（PTF）。$\MTF$ 的物理意义直接：一个空间频率为 $\xi$、调制度为 $V_{\mathrm{in}}$ 的正弦图案经过系统后，调制度变为 $\MTF(\xi)V_{\mathrm{in}}$。这正是结构光关心的量。
 
 \textbf{衍射限 MTF。} 非相干照明、圆形光瞳、无像差时 \citep{GoodmanFourierOptics}：
 \begin{equation}
@@ -81,9 +81,9 @@ PTF 的非零部分（彗差等非对称像差造成）对结构光尤其危险�
 
 \subsection{链路 MTF、调制幅与相位噪声}
 
-结构光中条纹经过两次成像：投影镜头把调制器上的图案成像到物面，相机镜头再把物面成像到传感器。物面的反射（含次表面散射）在中间又乘上一个「材料 $\MTF$」。设投影器件上条纹调制度为 $\gamma_0$，平均灰度为 $A$，物面条纹频率为 $\xi$，则相机所见调制幅约为
+结构光中条纹经过两次成像：投影镜头把调制器上的图案成像到物面，相机镜头再把物面成像到传感器。物面的反射（含次表面散射）在中间又乘上一个「材料 $\MTF$」。设投影端条纹调制度为 $V_0$（第~\ref{ch:06}~章），相机所见调制度 $V=M/A$，平均灰度为 $A$，物面条纹频率为 $\xi$，则相机所见调制幅约为
 \begin{equation}
-  M(\xi)\approx A\,\gamma_0\,\MTF_{\mathrm{proj}}(\xi)\,\MTF_{\mathrm{mat}}(\xi)\,\MTF_{\mathrm{cam}}(\xi).
+  M(\xi)\approx A\,V_0\,\MTF_{\mathrm{proj}}(\xi)\,\MTF_{\mathrm{mat}}(\xi)\,\MTF_{\mathrm{cam}}(\xi).
   \label{eq:ch08-chain}
 \end{equation}
 代入第~\ref{ch:06}~章式~\eqref{eq:ch06-phase-noise}，$\sigma_\varphi\approx\sqrt{2/N}\,\sigma_I/M$。相位误差折算为物面横向位置误差为 $\delta x=\sigma_\varphi/(2\pi\xi)$，再经第~\ref{ch:07}~章的三角关系变成深度误差。于是
@@ -126,7 +126,7 @@ PTF 的非零部分（彗差等非对称像差造成）对结构光尤其危险�
 
 \begin{enumerate}
   \item \textbf{（计算）} $\lambda=450\,\mathrm{nm}$、$N_F=5.6$ 与 $N_F=11$ 时衍射截止频率各为多少？对 $2.4\,\mu\mathrm{m}$ 像元，哪种情况下衍射成为奈奎斯特频率处的主导限制？
-  \item \textbf{（计算）} 某频率处投影 $\MTF=0.7$、材料 $0.6$、相机 $0.8$、像元 $0.9$，投影调制度 $\gamma_0=0.9$，平均灰度 $A=120$。估算调制幅 $M$；若 $\sigma_I=2$、四步相移，求 $\sigma_\varphi$。
+  \item \textbf{（计算）} 某频率处投影 $\MTF=0.7$、材料 $0.6$、相机 $0.8$、像元 $0.9$，投影端调制度 $V_0=0.9$，平均灰度 $A=120$。估算调制幅 $M$；若 $\sigma_I=2$、四步相移，求 $\sigma_\varphi$。
   \item \textbf{（重建场景）} 同一台设备在焦面处精度很好，在景深边缘噪声增加三倍以上，且条纹越密越明显。用 $\MTF$ 级联解释。
   \item \textbf{（重建场景）} 牙齿轮廓边缘一圈出现漂浮点，位于牙面与背景之间。原因是什么？给出基于 $M$ 和相位梯度的剔除规则。
   \item \textbf{（重建场景）} 换用另一颜色的投影光源后，未重新标定，平面重建出现轻微碗形。解释并给出对策。

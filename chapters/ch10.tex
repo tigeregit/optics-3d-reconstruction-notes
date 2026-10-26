@@ -62,9 +62,9 @@
 把各环节换算到深度，常用的「换算因子」是：
 \begin{itemize}
   \item 灰度噪声 $\to$ 相位：$\sigma_\varphi\approx\sqrt{2/N}\,\sigma_I/M$（第~\ref{ch:06}~章）；
-  \item 链路 $\MTF$ $\to$ 调制幅：$M\approx A\gamma_0\MTF_{\mathrm{link}}$（第~\ref{ch:08}~章）；
-  \item 相位 $\to$ 像面位置：$\delta u=\dfrac{P}{2\pi}\sigma_\varphi$（$P$ 为像面条纹周期，像素）；
-  \item 像面位置 $\to$ 深度：$\delta Z\approx Z^2\delta u/(Bf_x)$（第~\ref{ch:07}~章）；
+  \item 链路 $\MTF$ $\to$ 调制幅：$M\approx AV_0\MTF_{\mathrm{link}}$（第~\ref{ch:08}~章）；
+  \item 相位 $\to$ 视差：$\delta d=\dfrac{P}{2\pi}\sigma_\varphi$（$P$ 为像面条纹周期，像素；相机–投影仪对中投影侧坐标由相位给出，视差误差即相机侧定位误差折算值）；
+  \item 视差 $\to$ 深度：$\delta Z\approx Z^2\delta d/(Bf_x)$（第~\ref{ch:07}~章）；
   \item 标定尺度误差 $\to$ 深度：$\delta Z/Z=\delta B/B$ 或 $\delta f_x/f_x$（第~\ref{ch:07}~章）。
 \end{itemize}
 
@@ -74,15 +74,15 @@
 
 \begin{table}[htbp]
   \centering
-  \small
+  \small\setlength{\tabcolsep}{4pt}
   \begin{tabular}{@{}llllc@{}}
     \toprule
     环节 & 误差项 & 性质 & 深度贡献（量级） & 章 \\
     \midrule
     传感器 & 光子+读出噪声，$\sigma_\varphi\approx0.03\,\mathrm{rad}$ & 随机 & $\sim1.4\,\mu\mathrm{m}$ & \ref{ch:05}, \ref{ch:06} \\
-    镜头 & 景深边缘 $\MTF$ 降至 $1/3$ & 随机放大 & $\times3$（$\sim4\,\mu\mathrm{m}$） & \ref{ch:08} \\
+    镜头 & 景深边缘 $\MTF$ 降至 $1/3$ & 乘子$^{\dagger}$ & $\times3$（$\to\sim4\,\mu\mathrm{m}$）  & \ref{ch:08} \\
     投影 & 伽马谐波残差 & 系统 & $2$--$5\,\mu\mathrm{m}$ & \ref{ch:06} \\
-    场景 & 次表面散射偏置 & 系统 & $10$--$40\,\mu\mathrm{m}$ & \ref{ch:06} \\
+    场景 & 散射偏置 & 系统 & $10$--$40\,\mu\mathrm{m}$ & \ref{ch:06} \\
     场景 & 高反饱和区 & 系统/缺失 & 失效，需掩膜 & \ref{ch:04}, \ref{ch:06} \\
     镜头 & 残余畸变 & 系统 & $2$--$10\,\mu\mathrm{m}$ & \ref{ch:02} \\
     镜头 & 色差（标定波长不符） & 系统 & $\sim5\,\mu\mathrm{m}$ & \ref{ch:08} \\
@@ -92,11 +92,12 @@
     点云 & 全牙弓拼接累积 & 系统（累积） & 数十--上百 $\mu\mathrm{m}$ & — \\
     \bottomrule
   \end{tabular}
+  \par\smallskip\footnotesize $^{\dagger}$ 乘子作用于上一行的随机项（景深边缘处），不是独立误差项，不另计入平方和。
   \caption{误差预算示意（数量级示意，不对应具体产品）。}
   \label{tab:ch10-budget}
 \end{table}
 
-随机项计算示例：$\delta u=16\times0.03/(2\pi)\approx0.076$ 像素，$\delta Z\approx225\times0.076/12000\,\mathrm{mm}\approx1.4\,\mu\mathrm{m}$。表格的结论与第~\ref{ch:07}~章一致：\emph{单点随机噪声远不是瓶颈}，材料、标定与拼接等系统项主导。改进的优先级应按系统项从大到小排列。
+随机项计算示例：$\delta d=16\times0.03/(2\pi)\approx0.076$ 像素，$\delta Z\approx225\times0.076/12000\,\mathrm{mm}\approx1.4\,\mu\mathrm{m}$。表格的结论与第~\ref{ch:07}~章一致：\emph{单点随机噪声远不是瓶颈}，材料、标定与拼接等系统项主导。改进的优先级应按系统项从大到小排列。
 
 \subsection{诊断检查清单：按症状反查}
 

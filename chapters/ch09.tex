@@ -27,7 +27,7 @@
   \Delta z_{\mathrm{conf}}\sim\frac{\lambda}{\mathrm{NA}^2}
   \label{eq:ch09-conf}
 \end{equation}
-（常数因子依赖针孔大小与定义，量级为 $0.5$--$1.5$）。与第~\ref{ch:01}~章的景深同源：$\NA$ 越大，焦面外越快模糊，层切越薄。
+（常数因子依赖针孔大小、折射率与定义：理想小针孔、小 $\NA$ 时轴向响应半高宽约 $1.3\,n\lambda/\NA^2$，针孔变大则变宽；此处只作量级比较）。与第~\ref{ch:01}~章的景深同源：$\NA$ 越大，焦面外越快模糊，层切越薄。
 
 要点：
 \begin{itemize}
@@ -56,7 +56,7 @@ OCT 的独特能力是\emph{看进去}：给出组织内部多层界面的反射
 
 \subsection{ToF：飞行时间}
 
-\textbf{脉冲 ToF}：发出短脉冲，测量往返时间 $\Delta t$，$Z=c\Delta t/2$。$1\,\mathrm{mm}$ 深度对应约 $6.7\,\mathrm{ps}$ 往返时间，可见毫米级精度需要皮秒级时间分辨。
+\textbf{脉冲 ToF}：发出短脉冲，测量往返时间 $\Delta t$，$Z=c\Delta t/2$（本章 $c$ 为光速，不同于第~\ref{ch:01}~章的弥散圆直径）。$1\,\mathrm{mm}$ 深度对应约 $6.7\,\mathrm{ps}$ 往返时间，可见毫米级精度需要皮秒级时间分辨。
 
 \textbf{相位 ToF（调幅连续波）}：光源强度按调制频率 $F_m$（角频率 $\omega_m=2\pi F_m$；注意：$F_m$ 是强度包络的调制频率，通常为数十兆赫兹，远低于光频 $\nu$）正弦调制。返回光相对发射光有相位延迟 $\phi_m$，则
 \begin{equation}

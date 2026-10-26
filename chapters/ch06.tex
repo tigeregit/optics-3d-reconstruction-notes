@@ -32,7 +32,7 @@
 \end{equation}
 其中 $A$ 为背景（含环境光与平均反射），$M$ 为调制幅度，$\delta_k$ 为第 $k$ 帧的已知相移，$\varphi$ 为待求相位。$\varphi$ 编码了「该相机像素看到的是投影仪哪一列」：$u_p=\dfrac{P}{2\pi}\varphi$。这里的强度沿用相对强度 $I$，前提是相机工作在线性区且曝光锁定（第~\ref{ch:05}~章）。
 
-调制度定义为 $\gamma_m=M/A$，与第~\ref{ch:03}~章的可见度 $V$ 同义。离焦、次表面散射、环境光都会降低 $\gamma_m$。
+相机所见的调制度（条纹对比度）记为 $V=M/A$，与第~\ref{ch:03}~章的可见度是同一个量；投影端（调制器上）的调制度记为 $V_0$。离焦、次表面散射、环境光都会降低 $V$。
 
 \subsection{$N$ 步相移}
 
@@ -45,7 +45,7 @@
   M=\frac{2}{N}\sqrt{\Bigl(\sum_k I_k\sin\delta_k\Bigr)^2+\Bigl(\sum_k I_k\cos\delta_k\Bigr)^2},
   \qquad
   A=\frac{1}{N}\sum_k I_k.
-  \label{eq:ch06-AB}
+  \label{eq:ch06-AM}
 \end{equation}
 四步（$N=4$）时简化为
 \[
