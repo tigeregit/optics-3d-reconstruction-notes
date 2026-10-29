@@ -109,7 +109,7 @@ $\mu>0$ 为阻尼（全书记号）。$\mu$ 大时步子像梯度下降，稳；
   \boldsymbol e
   =\begin{pmatrix}10.4-7.619\\ 30.1-26.667\end{pmatrix}
   =\begin{pmatrix}2.781\\ 3.433\end{pmatrix},\qquad
-  C(\boldsymbol\theta_0)=\frac12\|\boldsymbol e\|^2\approx 9.786.
+  C(\boldsymbol\theta_0)=\frac12\|\boldsymbol e\|^2\approx 9.761.
 \]
 按定义 $J=\partial\boldsymbol e/\partial\boldsymbol\theta=-\partial\hat{\boldsymbol u}/\partial\boldsymbol\theta$（残差 $=$ 观测减预测，故雅可比带负号）。符号形式
 \[
@@ -135,7 +135,7 @@ $\mu>0$ 为阻尼（全书记号）。$\mu$ 大时步子像梯度下降，稳；
 \]
 更新后 $\hat u_1\approx10.509$、$\hat u_2\approx30.197$，
 $\boldsymbol e_1\approx(-0.109,\,-0.097)^\top$，
-$C(\boldsymbol\theta_1)\approx0.036$（由 $9.786$ 下降）。真值 $(0.10,0)$；一步未到，但方向正确。习题要求对比 $\mu=0$ 的 GN 步与再迭代一次。
+$C(\boldsymbol\theta_1)\approx0.011$（由 $9.761$ 下降）。真值 $(0.10,0)$；一步未到，但方向正确。习题要求对比 $\mu=0$ 的 GN 步与再迭代一次。
 
 \textbf{读数。} $J^\top J$ 的条件数已经很大：$\alpha_Z$ 与 $t_x$ 通过「整体缩放」耦合——这正是「等距平行拍摄时焦距与深度纠缠」的微型版。LM 的 $\mu I$ 把最小特征值抬起来，避免一步跳出。
 
