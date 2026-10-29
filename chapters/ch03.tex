@@ -61,7 +61,7 @@
 
 \textbf{6. 金标准抽检。} 重投影 RMS 是必要条件；用已知长度量块或球棒在\textbf{扫描工况}下测尺度与平面度，才接近充分条件。
 
-\subsection{数学①：重投影 LS $\to$ GN $\to$ LM $\to$ 小规模 BA}
+\subsection{数学一：重投影 LS $\to$ GN $\to$ LM $\to$ 小规模 BA}
 \label{sec:ch03-ba}
 
 记号与第~\ref{ch:02}~章一致：世界点 $\boldsymbol X$，外参 $R,t$，归一化坐标经畸变后乘 $K$ 得像素。观测像素 $\boldsymbol u^{\mathrm{obs}}=(u,v)^\top$。重投影残差（锁表：$e$）
@@ -143,7 +143,7 @@ $\mu>0$ 为阻尼（锁表）。$\mu$ 大时步子像梯度下降，稳；$\mu$ 
 
 \textbf{读数。} $J^\top J$ 的条件数已经很大：$s$ 与 $t_x$ 通过「整体缩放」耦合——这正是「等距平行拍摄时焦距与深度纠缠」的微型版。LM 的 $\mu I$ 把最小特征值抬起来，避免一步跳出。
 
-\subsection{数学②：齐次、单应、$E\cdot F$ 到立体外参}
+\subsection{数学二：齐次、单应、$E\cdot F$ 到立体外参}
 \label{sec:ch03-homography}
 
 \textbf{齐次。} 像素 $(u,v,1)^\top\sim K[R|t]\boldsymbol X^{\mathrm{h}}$。$\sim$ 表示差一个尺度 $s$（锁表）。三角测量与标定都在这个等价类上运算。
