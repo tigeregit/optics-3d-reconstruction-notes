@@ -1,243 +1,206 @@
-\chapter{投影光学与结构光}
+\chapter{光度学、辐射度与相机响应}
 \label{ch:06}
 
 \section{效果}
-\label{sec:ch06-effect}
+
+本章管光度与响应：曝光、噪声、灰度与辐照度的差别。\textbf{几何标定}（$K$、畸变、外参、手眼）归第~\ref{ch:03}~章；投影伽马与条纹相位归第~\ref{ch:07}~章。
+\label{sec:ch05-effect}
 
 读完本章，你应能：
 \begin{enumerate}
-  \item 把投影仪看作「倒装的相机」，说明其光路、景深与畸变如何进入结构光几何；
-  \item 写出正弦条纹模型与 $N$ 步相移求相位 $\varphi$ 的公式，并给出调制度、$\SNR$ 与相位噪声的关系；
-  \item 用时间相位展开、多频外差与格雷码的直觉解释「包裹相位如何变成绝对相位」，以及各自的失效方式；
-  \item 叙述从绝对相位到深度 $(X,Y,Z)$ 的标定链；
-  \item 说明 DMD 与 LCoS 的调制概念：二值调制、离焦成正弦、伽马非线性、帧同步；
-  \item 诊断口内结构光中的高反、次表面散射与运动伪影。
+  \item 沿链条区分辐射通量 $\Phi$、辐亮度 $L$、辐照度 $E$，并说明成像后像面 $E$ 与场景 $L$ 的一阶关系；
+  \item 解释曝光时间、光圈、增益如何把 $E$ 映射为灰度，以及为何\textbf{灰度不等于辐照度}；
+  \item 写出光子噪声与读出噪声对 $\SNR$ 的够用模型，并连接到相位/立体匹配方差；
+  \item 诊断自动曝光、自动增益如何破坏多帧光度一致性，进而伤害结构光与立体。
 \end{enumerate}
 
 \section{原理}
-\label{sec:ch06-principle}
+\label{sec:ch05-principle}
 
-\subsection{投影仪：倒装的相机}
+\subsection{辐射度量链条}
 
-投影仪由光源、匀光、空间光调制器（DMD 或 LCoS 等）与投影镜头组成。几何上，它与相机互为对偶：相机把空间射线映到像素 $(u,v)$；投影仪把调制器像素 $(u_p,v_p)$ 映为空间射线。因此投影仪同样有内参 $K_p$、畸变与外参，第~\ref{ch:02}~章的模型可原样搬用，只是「像面」换成调制器平面。
-
-投影镜头的景深同样有限。条纹投到工作距范围之外时，投影侧离焦先把条纹模糊，相机侧离焦再模糊一次；两次 $\PSF$ 的卷积共同决定相机所见调制度。口内设备常让投影与相机共用或靠近同一工作距，并选较小相对孔径以换取景深 $Z_d$，代价是光通量（第~\ref{ch:05}~章）。
-
-\subsection{正弦条纹模型}
-
-投影仪沿一个方向（设为 $u_p$）投出周期为 $P$ 像素的正弦条纹。物体表面反射后，相机像素 $(u,v)$ 处的第 $k$ 帧灰度可写作
+几何光学管方向，波动光学管相位与分辨；光度/辐射度管「有多少」。本书采用辐射度量（物理单位），需要视觉加权时再另说。基本量：
+\begin{itemize}
+  \item 辐射通量 $\Phi$：单位时间辐射能（W）；
+  \item 辐亮度 $L$：单位面积、单位立体角的通量（$\mathrm{W\,m^{-2}\,sr^{-1}}$），描述离开表面的方向性明暗；
+  \item 辐照度 $E$：入射到表面单位面积的通量（$\mathrm{W\,m^{-2}}$）。
+\end{itemize}
+强度一词易混：干涉章用 $I$ 多指相对强度；与辐照度并谈时优先用 $E$。场景点的 $L$ 经镜头收集，在像面产生辐照度 $E_{\mathrm{img}}$；旁轴、理想透镜下有经典关系：像面照度与场景辐亮度、光圈大致满足
 \begin{equation}
-  I_k(u,v)=A(u,v)+M(u,v)\cos\!\bigl(\varphi(u,v)+\delta_k\bigr),\qquad k=0,\dots,N-1,
-  \label{eq:ch06-fringe}
+  E_{\mathrm{img}} \;\propto\; L\,\frac{\pi}{4(F\#)^{2}}\,\cos^{4}\theta,
+  \label{eq:ch06-image-irr}
 \end{equation}
-其中 $A$ 为背景（含环境光与平均反射），$M$ 为调制幅度，$\delta_k$ 为第 $k$ 帧的已知相移，$\varphi$ 为待求相位。$\varphi$ 编码了「该相机像素看到的是投影仪哪一列」：$u_p=\dfrac{P}{2\pi}\varphi$。这里的强度沿用相对强度 $I$，前提是相机工作在线性区且曝光锁定（第~\ref{ch:05}~章）。
-
-相机所见的调制度（条纹对比度）记为 $V=M/A$，与第~\ref{ch:03}~章的可见度是同一个量；投影端（调制器上）的调制度记为 $V_0$。离焦、次表面散射、环境光都会降低 $V$。
-
-\subsection{$N$ 步相移}
-
-取等间隔相移 $\delta_k=2\pi k/N$（$N\ge3$）。最小二乘解为
-\begin{equation}
-  \varphi_w=\operatorname{atan2}\Bigl(-\sum_{k}I_k\sin\delta_k,\ \sum_{k}I_k\cos\delta_k\Bigr),
-  \label{eq:ch06-nstep}
-\end{equation}
-\begin{equation}
-  M=\frac{2}{N}\sqrt{\Bigl(\sum_k I_k\sin\delta_k\Bigr)^2+\Bigl(\sum_k I_k\cos\delta_k\Bigr)^2},
-  \qquad
-  A=\frac{1}{N}\sum_k I_k.
-  \label{eq:ch06-AM}
-\end{equation}
-四步（$N=4$）时简化为
-\[
-  \varphi_w=\operatorname{atan2}(I_3-I_1,\ I_0-I_2).
-\]
-所得 $\varphi_w$ 落在 $(-\pi,\pi]$，称为包裹相位（图~\ref{fig:ch06-fringe}）。
-
-\textbf{相位噪声。} 若每帧灰度噪声标准差为 $\sigma_I$（加性、独立），相位标准差约为
-\begin{equation}
-  \sigma_{\varphi}\approx\sqrt{\frac{2}{N}}\,\frac{\sigma_I}{M}.
-  \label{eq:ch06-phase-noise}
-\end{equation}
-即相位精度正比于「调制幅度对噪声」的比，而不是「平均亮度对噪声」。$M$ 小而 $A$ 大（环境光强、散射严重）时，光子噪声随 $A$ 增长而 $M$ 不长，相位反而更差。这是结构光的 $\SNR$ 应定义在调制项上的原因。增大 $N$ 以 $\sqrt{N}$ 降噪，但需要更多帧，对运动更敏感。
-
-$N$ 步相移还有一个好处：若相机或投影存在伽马非线性，谐波会引入周期性相位误差；$N$ 越大，越高阶的谐波才会混叠进相位，因此误差越小。
+其中 $F\#$ 为光圈数，$\theta$ 为视场角（$\cos^{4}$ 为自然渐晕的一种近似）。精确系数依赖光瞳与透过率；工程上由标定吸收 \citep{HechtOptics,Horn1986RobotVision}。
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.98\textwidth]{fig-fringe-phase.pdf}
-  \caption{四步相移条纹截面、包裹相位与展开相位的概念草图（非精确工程图）。}
-  \label{fig:ch06-fringe}
+  \includegraphics[width=0.95\textwidth]{fig-radiometry-camera.pdf}
+  \caption{从通量 $\Phi$、辐亮度 $L$、像面辐照度 $E$ 到灰度的概念链条（非精确工程图）。中间的曝光与响应使灰度$\neq E$。}
+  \label{fig:ch06-radio}
 \end{figure}
 
-\subsection{相位展开}
+\subsection{相机响应：从 $E$ 到数字灰度}
 
-包裹相位只给出「在一个条纹周期内的位置」，还需确定整数级次 $k$：$\varphi=\varphi_w+2\pi k$。两类思路：
+传感器在曝光时间 $\tau$ 内积分光子，经量子效率 $\eta_{\mathrm{QE}}$（每个入射光子产生光电子的概率，随波长变化）变成电子，再经增益、偏置、非线性与量化得到数字数（DN，灰度）。可粗写
+\begin{equation}
+  \mathrm{DN} = g\bigl(\eta_{\mathrm{QE}}\,E_{\mathrm{img}}\,\tau + n_{\mathrm{dark}}\bigr) + n_{\mathrm{read}} + \cdots,
+  \label{eq:ch06-response}
+\end{equation}
+$g$ 含模拟增益与 ADC，$n_{\mathrm{dark}}$ 暗电流贡献，$n_{\mathrm{read}}$ 读出噪声。还有 gamma、色调映射、自动白平衡等会破坏线性。因此：
+\begin{quote}
+\textbf{灰度不是物理 $E$ 的同义词。}同一场景，改 $\tau$、增益或打开自动曝光，DN 可以大变而 $E$ 不变。
+\end{quote}
 
-\textbf{空间展开。} 沿图像路径累加相邻像素的相位差，假设相邻像素差不超过 $\pi$。在连续光滑表面有效；遇到遮挡、陡坡、孤立区域（牙间隙、器械边缘）时会把错误传播开来。质量引导、最小范数等方法改进了鲁棒性，系统论述见 \citet{GhigliaPritt1998}。
+光度立体、反射率估计、某些相位模型若假设 DN$\propto E$，必须锁定曝光/增益并做线性化（或辐射定标）。结构光相位对「局部线性 + 稳定调制」更敏感：削顶饱和与非线性会偏置 $\varphi$。
 
-\textbf{时间展开。} 每个像素独立地用额外图案确定 $k$，不依赖邻域，因此对不连续表面更稳。常见三种：
+\subsection{噪声与 $\SNR$}
+
+主要噪声源（够用分类）：
 \begin{itemize}
-  \item \textbf{多频（外差）}：投两个或多个周期 $P_1<P_2$ 的条纹，其相位差相当于等效长周期 $P_{\mathrm{eq}}=P_1P_2/(P_2-P_1)$。等效周期覆盖整个视场时，即可逐级确定高频条纹的级次。代价是噪声在逐级推导中被放大 $P_{\mathrm{eq}}/P_1$ 倍，频率比不能选得过大。
-  \item \textbf{格雷码}：投 $m$ 幅二值图案，给每个条纹周期编号 $0,\dots,2^m-1$。格雷码相邻编号只差一位，边界上误判最多错一级。弱点是黑白边界处被模糊后易判错，常出现「级次跳变一个周期」的线状误差，需要与包裹相位边界对齐校正。
-  \item \textbf{相位编码 / 其他}：把级次编码在额外的相位图中，原理相近。
+  \item \textbf{光子（散粒）噪声}：电子数 $N$ 的方差约等于 $N$（泊松），$\SNR_{\mathrm{ph}}\sim\sqrt{N}$；
+  \item \textbf{读出噪声}：与信号近似独立的电子标准差 $\sigma_{\mathrm{r}}$；
+  \item \textbf{量化噪声}：ADC 等级有限；
+  \item \textbf{固定图案噪声}：像元响应不均，可部分标定 \citep{Janesick2001PhotonTransfer}。
 \end{itemize}
-共同点：高频条纹负责精度，低频或编码负责唯一性。设计时先让最高频条纹在工作距内仍有足够 $M$（第~\ref{ch:03}~章的通带），再选最少的辅助图案保证展开正确。
+亮场光子噪声常占主导；暗场或短曝光时读出噪声显眼。综合信噪比记 $\SNR$。相位估计标准差常粗估为
+\begin{equation}
+  \sigma_{\varphi} \;\propto\; \frac{1}{V\cdot\SNR},
+  \label{eq:ch06-phase-snr}
+\end{equation}
+可见度 $V$ 与 $\SNR$ 任一塌陷都会抬相位噪声，再经三角测量进 $\delta Z$（第~\ref{ch:03}~章、第~\ref{ch:08}~章）。立体匹配的代价函数同样在低 $\SNR$ 时变平坦，视差方差上升。
 
-\subsection{从相位到深度：标定链}
+\subsection{自动曝光与多帧一致性}
 
-绝对相位 $\varphi$ 给出投影仪列坐标 $u_p$。与相机像素 $(u,v)$ 一起，就有一对对应：相机射线与投影仪的一张「光平面」（单方向条纹时是平面，而非射线）。三角求交即得 $(X,Y,Z)$。所需参数：
-\begin{enumerate}
-  \item 相机内参 $K$ 与畸变；
-  \item 投影仪内参 $K_p$ 与畸变（通常借助相机「替投影仪看」标定板：投影仪通过相位反算标定板角点的 $(u_p,v_p)$）；
-  \item 两者相对外参 $R,t$。
-\end{enumerate}
-另一种做法是\textbf{相位–高度查表}：在若干已知高度的平面上记录每像素的相位，拟合 $Z=g_{uv}(\varphi)$ 多项式。查表绕开显式模型，对投影畸变不敏感，但只在标定过的深度范围内可靠，外推会出错。
-
-两种方法都要求：标定时与工作时的曝光、对焦、伽马处理、投影亮度完全一致；任何改变都会使 $\varphi$ 到 $Z$ 的映射漂移。
-
-\subsection{DMD 与 LCoS：调制概念}
-
-\textbf{DMD（数字微镜器件）} 由大量可在两种倾角间翻转的微镜组成。「开」镜把光反射进投影镜头，「关」镜反射到吸收器。单个微镜只能二值；灰度靠在一帧内按比特面控制开关时间（脉宽调制）。这带来两个工程后果：
+结构光常拍一组相移图；立体可多曝光融合。若每帧自动曝光/自动增益独立动作：
 \begin{itemize}
-  \item 相机曝光若不是比特周期的整数倍，或未与投影帧同步，会截取到不完整的比特序列，灰度出错，表现为条纹「跳灰度」或帧间闪烁；
-  \item 灰度正弦需要多个比特面，帧率下降。
+  \item 各帧平均 DN 被拉齐，但等效 $g\tau$ 不同；
+  \item 相移模型里的直流与交流项被错误缩放，$V$ 与 $\varphi$ 估计失真；
+  \item 立体的光度一致性假设被破坏，匹配贴到错误视差。
 \end{itemize}
+正确做法：锁定曝光、增益、光圈、投影亮度；需要高动态时用\textbf{已知}多曝光并按定标合并，而不是让相机「自作主张」。
 
-\textbf{二值离焦法}：直接投二值方波条纹，让投影镜头适度离焦，方波高次谐波被 $\MTF$ 衰减，到达物体时近似正弦（图~\ref{fig:ch06-dmd}）。优点：一个比特面一帧，可上千赫兹，并且没有伽马问题。缺点：近似正弦的程度依赖离焦量，即依赖深度；残余谐波造成周期性相位误差。
+\subsection{与几何、波动章节的接口}
 
-\textbf{LCoS（硅基液晶）} 通过液晶对偏振态的调制实现连续灰度，需要偏振光照明与检偏（第~\ref{ch:04}~章），响应较慢，有灰度–电压非线性。
+光圈同时出现在式~\eqref{eq:ch06-image-irr} 与景深 $Z_d$、衍射 $\NA$ 中：放大光圈提 $E$ 与潜在 $\SNR$，但减 $Z_d$、可能改像差。波长 $\wavelength$ 进入衍射与传感器量子效率；不要用 $f$ 表示频率。辐亮度 $L$ 的高动态范围是高反牙面饱和的根因之一，需与第~\ref{ch:05}~章偏振联立治理。
 
-\textbf{伽马。} 投影仪与相机的灰度响应常非线性，投入的「正弦」实际变成含谐波的周期曲线，导致相位误差呈条纹周期的 $N$ 倍频波纹。对策：标定伽马曲线并预失真；或增加相移步数；或使用二值离焦。
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.95\textwidth]{fig-dmd-concept.pdf}
-  \caption{DMD 微镜二值开关与二值条纹经离焦近似为正弦的概念草图（非精确工程图）。}
-  \label{fig:ch06-dmd}
-\end{figure}
+\subsection{暗场、平场与固定图案}
 
-\subsection{推导：$N$ 步相移的最小二乘解}
+即使锁定曝光，传感器仍有暗电流与像元响应不均。暗场（盖镜或关投影）估计偏置与暗电流；平场（均匀亮场）估计相对增益。结构光相移若在固定投影亮度下工作，平场可把固定图案从交流项里抽走，降低空间相关的伪相位。忽略平场时，传感器尘点、微透镜渐晕会变成「假形貌」。注意：平场必须在与工作相同的光圈、曝光、温度邻近条件下采集，否则又引入新的不一致。
 
-式~\eqref{eq:ch06-nstep} 的中间步如下。把式~\eqref{eq:ch06-fringe} 展开为对未知量线性的形式：
+\subsection{量化、位深与「看起来够亮」}
+
+8~bit 预览图在中等灰度也许「看起来干净」，但对相位而言，量化步长相对于条纹振幅可能已经偏大。尽量在传感器原生位深（10/12/16~bit）下计算，再决定是否缩放到显示。自动对比度拉伸属于显示管道，不应回写到重建输入。$\SNR$ 分析要用电子域或线性 DN，而不是经过 JPEG 的感知亮度。
+
+\subsection{运动与曝光的联合预算}
+
+手持系统存在允许的最大曝光 $\tau_{\max}$，由可接受拖影（像素）与角速度决定。在 $\tau\le\tau_{\max}$ 下若光子不足，只能加投影功率、开光圈（付 $Z_d$ 代价）、或改善量子效率/降低读出噪声。把「运动模糊限制」与「光子 $\SNR$ 限制」画在同一张预算表上，才能避免无休止地在算法侧加平滑。
+
+\subsection{推导：相位噪声写成 $V$ 与 $\SNR$ 的形式}
+
+式~\eqref{eq:ch06-phase-snr} 只写了比例关系，这里给出系数。第~\ref{ch:07}~章将推出 $N$ 步相移的相位噪声 $\sigma_\varphi\approx\sqrt{2/N}\,\sigma_I/M$。把 $M=VA$、$\SNR=A/\sigma_I$（以平均灰度定义的单帧信噪比）代入：
+\begin{equation}
+  \sigma_\varphi\approx\sqrt{\frac{2}{N}}\;\frac{1}{V\cdot\SNR}.
+  \label{eq:ch06-phase-snr-N}
+\end{equation}
+适用条件：各帧噪声独立、同方差，且 $\sigma_I$ 在相移帧之间近似不变（光子噪声随灰度变化，严格说条纹亮处与暗处方差不同，但 $V$ 不太接近 $1$ 时取平均值误差不大）；未饱和、无削顶。若光子噪声主导，$\SNR=\sqrt{N_e}$（$N_e$ 为平均电子数），于是 $\sigma_\varphi\approx\sqrt{2/(N N_e)}/V$：总电子数 $NN_e$ 才是决定相位精度的量，多拍几帧与每帧多收光在光子噪声限下等价。
+
+\subsection{推导：光子传递曲线}
+
+要把 DN 换成电子数，需要相机的转换增益。设 $g$ 为每个电子对应的 DN（DN/e$^-$），信号 $N_e$ 个电子，读出噪声 $\sigma_{\mathrm r}$ 个电子。均值与方差（以 DN 计）为
 \[
-  I_k=A+a\cos\delta_k+b\sin\delta_k,\qquad a=M\cos\varphi,\quad b=-M\sin\varphi .
+  \mu_{\mathrm{DN}}=gN_e,\qquad
+  \sigma_{\mathrm{DN}}^2=g^2N_e+g^2\sigma_{\mathrm r}^2=g\,\mu_{\mathrm{DN}}+g^2\sigma_{\mathrm r}^2 .
 \]
-三个未知数 $(A,a,b)$，$N\ge3$ 个方程。最小化 $\sum_k(I_k-A-a\cos\delta_k-b\sin\delta_k)^2$，正规方程的系数矩阵由 $\sum1$、$\sum\cos\delta_k$、$\sum\cos^2\delta_k$ 等组成。等间隔相移 $\delta_k=2\pi k/N$ 时有
-\begin{gather*}
-  \sum_k\cos\delta_k=\sum_k\sin\delta_k=\sum_k\sin\delta_k\cos\delta_k=0,\\
-  \sum_k\cos^2\delta_k=\sum_k\sin^2\delta_k=\frac N2 ,
-\end{gather*}
-（$N\ge3$ 时成立；$N=2$ 时 $\sum\cos^2=2$、$\sum\sin^2=0$，$b$ 不可解，这就是至少三步的原因。）矩阵对角化，解直接读出：
+第二个等式用了泊松方差等于均值。于是在均匀光照下扫几档曝光，画 $\sigma_{\mathrm{DN}}^2$ 对 $\mu_{\mathrm{DN}}$ 的直线：斜率是 $g$，截距是 $g^2\sigma_{\mathrm r}^2$ \citep{Janesick2001PhotonTransfer}。实测时用两帧相减消除固定图案噪声（相减后方差为单帧的两倍），并扣除暗场偏置。
+
+\textbf{例（数量级示意）。} 两档曝光测得 $(\mu,\sigma^2)=(1000,260)$、$(2000,510)$（DN 与 DN$^2$，已扣偏置）。斜率 $g=250/1000=0.25\,\mathrm{DN/e^-}$，即每 DN 对应 $4$ 个电子；截距 $260-250=10\,\mathrm{DN^2}$，$\sigma_{\mathrm r}=\sqrt{10}/0.25\approx12.6$ 个电子。12 位 ADC 满量程 $4095$ DN 对应约 $16000$ 个电子。这些数让第~\ref{ch:00}~章的走查有了实测入口：DN 读数乘 $4$ 就是电子数，$\SNR$ 可以直接算。曲线在高端偏离直线（方差下降）处就是饱和或非线性的起点，结构光的曝光上限应留在它以下。
+
+\subsection{例：自动曝光让一帧变亮 $5\%$ 会怎样}
+
+用四步相移把「自动曝光破坏一致性」算出来。四步时 $\varphi_w=\operatorname{atan2}(S,C)$，$S=I_3-I_1=2M\sin\varphi$，$C=I_0-I_2=2M\cos\varphi$。设第 $1$ 帧被整体放大 $(1+\varepsilon)$，即 $I_1\to(1+\varepsilon)I_1$，其中 $I_1=A+M\cos(\varphi+\pi/2)=A-M\sin\varphi$。则 $S$ 的变化 $\delta S=-\varepsilon(A-M\sin\varphi)$，$C$ 不变。对 $\varphi=\operatorname{atan2}(S,C)$ 线性化：
 \[
-  A=\frac1N\sum_kI_k,\qquad a=\frac2N\sum_kI_k\cos\delta_k,\qquad b=\frac2N\sum_kI_k\sin\delta_k .
+  \delta\varphi=\frac{C\,\delta S-S\,\delta C}{S^2+C^2}
+  =-\frac{\varepsilon}{2}\,\cos\varphi\Bigl(\frac{1}{V}-\sin\varphi\Bigr).
 \]
-于是 $\varphi=\operatorname{atan2}(-b,a)$，$M=\sqrt{a^2+b^2}$，即式~\eqref{eq:ch06-nstep}、\eqref{eq:ch06-AM}。这组正交性同时说明了：相移不等间隔（例如投影器件的灰度非线性导致实际相移偏离 $2\pi k/N$）时交叉项不为零，$A$ 会泄漏进相位。
+误差幅度约为 $\varepsilon/(2V)$，且随 $\varphi$ 周期变化，表现为与条纹同频（及二倍频）的波纹。数值：$\varepsilon=0.05$、$V=0.5$，误差峰值约 $0.05\,\mathrm{rad}$，是第~\ref{ch:00}~章走查中光子噪声（$0.02\,\mathrm{rad}$）的两倍多；折算到深度，$\delta d=16\times0.05/6.28\approx0.13$ 像素，$\delta Z\approx2.4\,\mu\mathrm{m}$，而且是\emph{系统}波纹，平均多少次都不会消失。$V$ 越低，同样的曝光跳变造成的误差越大，因为跳变作用在 $A$ 上，而相位只由 $M$ 承载。
 
-\textbf{噪声。} 每帧加独立噪声 $n_k$（方差 $\sigma_I^2$），则 $a$、$b$ 的噪声方差都是 $(2/N)^2\cdot(N/2)\sigma_I^2=2\sigma_I^2/N$，且互不相关。相位误差是 $(a,b)$ 噪声在垂直于相量方向上的分量除以 $M$，故 $\sigma_\varphi=\sqrt{2/N}\,\sigma_I/M$，即式~\eqref{eq:ch06-phase-noise}；$M$ 的噪声标准差同为 $\sqrt{2/N}\,\sigma_I$。适用条件：$M\gg\sigma_I$（小噪声线性化）；$M$ 接近噪声水平时相位分布变宽并趋于均匀，线性公式失效。
+\subsection{例：量化噪声何时要紧}
 
-\subsection{推导：伽马为什么在三步时这么要紧}
-
-投影—相机链路的灰度非线性（伽马）把正弦条纹变成含谐波的周期信号：
-\[
-  I_k=A'+\sum_{n\ge1}a_n\cos\bigl(n(\varphi+\delta_k)\bigr).
-\]
-代入式~\eqref{eq:ch06-nstep} 的求和，第 $n$ 次谐波项含 $\sum_k\cos\bigl(n\delta_k\pm\delta_k\bigr)$。等间隔相移下，只有 $n\pm1\equiv0\pmod N$ 的谐波不被消去，即 $n=N-1$ 与 $n=N+1$ 次谐波会混叠到基频上。一阶近似下
-\[
-  \delta\varphi\approx\frac{a_{N+1}-a_{N-1}}{a_1}\,\sin(N\varphi),
-\]
-误差是相位的 $N$ 倍频波纹（符号依谐波相位而定）。谐波系数随阶次迅速衰减，因此 $N$ 增加一步，误差往往降一个数量级以上。
-
-\textbf{例（数量级示意）。} 投影的归一化灰度 $0.5+0.4\cos\theta$，经指数 $\Gamma=2.2$ 的幂律（伽马指数记为 $\Gamma$，以免与相干度 $|\gamma|$ 混淆）后再数值求谐波系数，得到相位误差峰值：三步约 $0.23\,\mathrm{rad}$，四步约 $0.0066\,\mathrm{rad}$，六步约 $10^{-4}\,\mathrm{rad}$（对应数值仿真结果与上式一致到百分之几）。按 $P=16$ 像素、第~\ref{ch:00}~章的几何，三步的 $0.23\,\mathrm{rad}$ 对应 $\delta d\approx0.6$ 像素、深度波纹约 $11\,\mu\mathrm{m}$，是光子噪声的十倍；四步时只有约 $0.3\,\mu\mathrm{m}$。若伽马已被预校正到残余 $\Gamma\approx1.1$，三步误差约 $0.022\,\mathrm{rad}$、四步约 $0.003\,\mathrm{rad}$。结论：三步方案必须做伽马校正；四步以上对伽马已相当不敏感。
-
-\subsection{推导：外差展开为什么会「跳级」}
-
-两频外差的等效周期
-\[
-  P_{\mathrm{eq}}=\frac{P_1P_2}{P_2-P_1}.
-\]
-其包裹相位差 $\varphi_{\mathrm{eq}}=\varphi_1-\varphi_2$（取模）若在全视场不超过一个周期，就是无歧义的粗相位。用它确定细相位 $\varphi_1$ 的级次：
-\[
-  k=\operatorname{round}\!\Bigl(\frac{(P_{\mathrm{eq}}/P_1)\,\varphi_{\mathrm{eq}}-\varphi_1}{2\pi}\Bigr).
-\]
-$\varphi_{\mathrm{eq}}$ 的噪声约为 $\sqrt2\sigma_\varphi$（两相位独立相减），被放大 $P_{\mathrm{eq}}/P_1$ 倍后与 $\pi$ 比较，超过 $\pi$ 就跳一级，造成一个整周期（$P_1$ 像素）的粗大误差。
-
-\textbf{例。} $P_1=16$、$P_2=18$，$P_{\mathrm{eq}}=144$，放大倍数 $9$。
-\begin{itemize}
-  \item $\sigma_\varphi=0.02\,\mathrm{rad}$：放大后约 $9\times0.028=0.25\,\mathrm{rad}$，$\pi$ 相当于约 $12\sigma$，跳级概率可忽略。
-  \item $\sigma_\varphi=0.1\,\mathrm{rad}$（低反射、暗区）：放大后约 $1.28\,\mathrm{rad}$，$\pi/1.28\approx2.45\sigma$，按高斯双侧尾概率约 $1.4\%$ 的像素跳级。
-\end{itemize}
-$1\%$ 量级的跳级像素在点云里表现为成片的「台阶」或孤立的离群点。对策：三频级联（每级放大倍数小）；用调制度 $M$ 设门限剔除低质量像素；或空间一致性校验。这也给出一个设计不等式：放大倍数 $\times\sqrt2\sigma_\varphi$ 应小于 $\pi$ 的约六分之一。
-
-\subsection{格雷码边界的误差}
-
-格雷码与相移组合时，级次来自二值图案的解码。二值边界被成像模糊（第~\ref{ch:08}~章）后，边界附近一两个像素的码值不可靠，正是在包裹相位跳变的位置。这两者不完全对齐时，就在每个周期边界出现一个像素宽的错级「毛刺」。常见做法：额外多投一帧互补图案判断边界；或把格雷码边界设计为与相位跳变错开半个周期，再用包裹相位本身修正级次。
+均匀量化的误差方差为 $q^2/12$（$q$ 为一个 DN 步长）。把它与光子噪声比较：上例中 $g=0.25$，平均 $A=5000$ 电子 $=1250$ DN 时光子噪声 $\sqrt{5000}\times0.25\approx18$ DN，量化噪声 $1/\sqrt{12}\approx0.29$ DN，可以忽略。但若把数据压成 8 位（$q=16$ 个原 DN），量化噪声 $16/\sqrt{12}\approx4.6$ DN，与光子噪声相比已不可忽略；暗区（$A$ 只有几百电子）更会被量化主导。经验规则：量化步长应小于噪声标准差，即每个 DN 对应的电子数小于 $\sqrt{N_e}$ 的若干分之一。
 
 \section{限度}
-\label{sec:ch06-limits}
+\label{sec:ch05-limits}
 
 \begin{itemize}
-  \item 式~\eqref{eq:ch06-fringe} 假设每像素只接收来自投影仪一个位置的直接反射。次表面散射与互反射违反该假设，属于模型误差，不是噪声。
-  \item 式~\eqref{eq:ch06-phase-noise} 假设加性独立噪声与静止物体；运动与非线性误差需要另外计算。
-  \item 多频与格雷码展开都假设辅助图案在工作距内可辨；景深外首先失效的往往是展开，而不是包裹相位本身。
-  \item 相位–高度查表只对标定范围内深度有效。
-  \item 本章不涉及单帧方法（傅里叶变换轮廓术、彩色编码、学习方法）的完整推导；它们以空间带宽或颜色换时间，仍受同样的光学限制。
+  \item 未展开完整 BRDF 与互易性证明；复杂皮肤/牙本质次表面散射需专用模型。
+  \item 式~\eqref{eq:ch06-phase-snr} 为数量级关系，具体系数依赖相移步数与滤波器。
+  \item 厂商「ISO」与电磁增益的映射因机而异；以测得的电子/DN 曲线为准。
+  \item 色调映射 HDR 预览图不可直接当线性辐射数据用于相位。
 \end{itemize}
 
 \section{对象}
-\label{sec:ch06-object}
+\label{sec:ch05-object}
 
-\textbf{口内结构光。} 工作距约十余毫米，景深仅数毫米，探头手持移动。常见折中：中高频条纹 + 少帧相移 + 时间展开，配合高帧率投影与全局快门相机。每多一帧，运动伪影风险就增加一份；每少一帧，相位噪声与伽马误差就增加一份。
+\textbf{$\SNR$ 预算。} 相位或匹配的目标 $\sigma_Z$ 反推到像面 $\sigma_u$，再反推到所需 $\SNR$ 与 $V$。若实测噪声超预算：先提高投影通量或曝光（在运动模糊允许内），再考虑降温/降读出噪声，最后才放大滤波核——滤波牺牲空间分辨率，等价于吃掉 $\MTF$。
 
-\textbf{高反（釉质湿润面、金属修复体）。} 高光处相机饱和，式~\eqref{eq:ch06-fringe} 削顶，相位错误且 $M$ 计算值异常。诊断：检查 $I_k$ 是否触顶；用 $M$ 与 $A$ 做质量图并掩膜。对策：交叉偏振、多曝光合成（锁定每档曝光，不用自动曝光）、喷粉（临床上逐渐被避免）。
+\textbf{自动曝光破坏光度一致性。} 临床演示模式常开 AE：同一相移序列中牙面「忽明忽暗」，解码花斑。交付配置应关闭 AE/AGC，固定曝光表；日志记录 $\tau$、增益、投影电流，便于复现。
 
-\textbf{次表面散射（牙本质、牙龈、半透明修复材料）。} 光进入材料后在内部扩散再射出，相当于条纹被一个空间核模糊并平移。结果：调制度 $M$ 下降、相位偏移，深度出现系统性的「下沉」或「平滑」。中低频条纹下，散射核宽度小于周期，散射光仍带着被平移的条纹，造成相位偏置；当条纹周期明显短于散射核宽度时，散射光被平均成近似常数，进入 $A$ 而不再偏置 $\varphi$，代价是 $M$ 降低。对策因此是：在 $M$ 仍够用的前提下提高条纹频率；短波长（蓝光）穿透更浅，常用于口内。
+\textbf{噪声对相位/匹配。} 短曝光抓手持稳定性时 $\SNR$ 骤降，相位图雪花、点云毛刺。可：同步提高投影功率；或接受短曝光但多帧同态平均（投影相位相同）；或改条纹频率/步数使估计更稳健。单纯在 CUDA 里加大平滑，会抹掉釉质真实高频。
 
-\textbf{运动伪影。} $N$ 帧之间物体移动 $\Delta u$ 像素，相当于每帧的 $\varphi$ 不同，求解得到的相位有与条纹同周期的波纹误差。诊断：静止模型上误差消失；误差随移动速度增大。对策：缩短总采集时间（提高投影帧率、减少帧数）、运动补偿、或用对运动不敏感的编码顺序。
+\textbf{灰度当 $E$ 用。} 把 JPEG/预览当输入做「光度立体」会得到伪起伏。应用原始线性位深、关掉 gamma，或做平板场与暗场标定后把 DN 映回相对 $E$。
 
-\subsection{例：手持运动对相移的影响}
 
-口扫是手持的，相移帧之间物体相对条纹在动。设沿条纹变化方向每帧移动 $\Delta x$，物面条纹周期 $P_o$，则每帧额外引入相位 $\varepsilon=2\pi\Delta x/P_o$，实际相移变为 $\delta_k+k\varepsilon$，而解算仍按 $\delta_k$。对不同 $N$ 数值仿真（$V=0.5$；结果与 $V$ 无关）得到：
-\begin{itemize}
-  \item 解出相位整体偏移 $(N-1)\varepsilon/2$，相当于取了序列中点时刻的位置，对几何无害；
-  \item 残余是二倍频波纹，峰值随 $N$ 变化但始终与 $\varepsilon$ 同量级：小 $\varepsilon$ 时 $N=3,4,5,6,8,12$ 分别约为 $0.58,\,0.50,\,0.53,\,0.58,\,0.70,\,0.99$ 倍 $\varepsilon$（$\varepsilon=0.31$ 时 $N=3$ 约 $0.64\varepsilon$，已显非线性）。步数多于四步时，序列更长，系数反而增大。
-\end{itemize}
-数量级示意：手持横向速度 $10\,\mathrm{mm/s}$，帧率 $1\,\mathrm{kHz}$，每帧 $\Delta x=10\,\mu\mathrm{m}$；$P_o=0.2\,\mathrm{mm}$ 时 $\varepsilon\approx0.31\,\mathrm{rad}$，四步时波纹约 $0.16\,\mathrm{rad}$，按第~\ref{ch:00}~章几何约 $7.5\,\mu\mathrm{m}$，是光子噪声的近八倍。帧率提到 $10\,\mathrm{kHz}$，$\varepsilon$ 降为 $0.031$，波纹约 $0.75\,\mu\mathrm{m}$。由此可见，增加相移步数并不能抑制运动误差，反而拉长序列、增大总位移与波纹系数；对手持设备，缩短序列总时长（高帧率、少步数）比增加步数更有效，而少步数又要求伽马校正到位。这是口扫在步数选择上的核心权衡。
+\textbf{联调口令。} 算法说「再加平滑」之前，光学侧应能回答：当前电子数 $N$ 是否达到预算；AE 是否锁定；暗场平场是否当日有效；光圈与 $Z_d$ 是否仍覆盖工作距。答不全时，优先补测而非加滤波。把口令写进测试用例，比写进口头传统更可靠。
+
+\textbf{从 DN 回读相对 $E$。} 在锁定增益下，用积分球或均匀光源扫多级曝光，拟合 DN–$E$ 曲线；重建管道输入改为「相对辐照度」后，相移与匹配的跨日一致性通常明显改善。若曲线显著非线性，应限制工作灰度区间或做逐级校正。
+
+\subsection{例：一次曝光规划}
+
+把本章的光子传递结果（满阱约 $16000$ 电子、读出噪声约 $12.6$ 电子）用于口扫的曝光设定，数量级示意，四步相移。
+\begin{enumerate}
+  \item \textbf{上限。} 条纹亮峰 $A+M=A(1+V)$ 应留在满阱的约 $80\%$ 以下（避开光子传递曲线的非线性段）。牙面 $V=0.5$：$1.5A\le12800$，$A\le8500$ 电子。
+  \item \textbf{牙面噪声。} $\sigma_I=\sqrt{8500+12.6^2}\approx93$ 电子，$\SNR\approx91$；由式~\eqref{eq:ch06-phase-snr-N}，$\sigma_\varphi\approx0.707/(0.5\times91)\approx0.016\,\mathrm{rad}$。
+  \item \textbf{同一曝光下的牙龈。} 反射率约低一个数量级、$V\approx0.15$：$A\approx850$，$\sigma_I\approx32$，$\SNR\approx27$，$\sigma_\varphi\approx0.18\,\mathrm{rad}$。按第~\ref{ch:07}~章的外差参数，这已高于 $0.1\,\mathrm{rad}$ 那一档，跳级概率在百分之几以上。
+  \item \textbf{若为照顾高光把曝光降到三分之一}：牙面 $A\approx2830$，$\sigma_\varphi\approx0.027\,\mathrm{rad}$；牙龈则进一步恶化到约 $0.35\,\mathrm{rad}$，基本不可用。
+\end{enumerate}
+结论：单一曝光难以同时照顾牙面、牙龈与高光。可选的出口各有代价：交叉偏振压高光（第~\ref{ch:05}~章，损失约一半信号）；双曝光融合（帧数加倍，加重第~\ref{ch:07}~章的运动误差）；或接受牙龈区较低质量、用调制度门限剔除跳级像素。
 
 \section*{本章收束}
-结构光把「投影仪哪一列照到这里」编码为相位 $\varphi$。相移决定相位精度，展开决定唯一性，标定决定相位到深度的映射。DMD 与 LCoS 的调制方式决定伽马、同步与帧率。对象场景中的误差大多可归入：调制度不足、模型假设被违背（散射、饱和）、帧间不一致（运动、曝光）。下一章讨论三角测量本身如何放大这些误差。
+$\Phi\to L\to E\to\mathrm{DN}$ 的链条说明灰度不是辐照度；$\SNR$ 与 $V$ 共同限制相位与匹配。锁定曝光是多帧重建的配置底线。至此，几何（前三章）、波动与偏振、光度三条线索已齐，可进入投影结构光与立体限度专题。
 
 \section{习题}
-\label{sec:ch06-exercises}
+\label{sec:ch05-exercises}
 
 \begin{enumerate}
-  \item \textbf{（计算）} 四步相移得到 $I_0=180,\ I_1=100,\ I_2=60,\ I_3=140$。求包裹相位 $\varphi_w$、$A$、$M$ 与调制度 $M/A$。
-  \item \textbf{（计算）} 三步与六步相移，若 $\sigma_I/M$ 相同，相位标准差之比是多少？六步的代价是什么？
-  \item \textbf{（计算）} 两组条纹周期 $P_1=16$ 像素、$P_2=18$ 像素。求等效周期 $P_{\mathrm{eq}}$。若投影仪宽 $912$ 像素，等效周期能否覆盖全宽？噪声放大倍数约为多少？
-  \item \textbf{（重建场景）} 某口内扫描点云在牙龈与半透明修复体上比釉质「低」约几十微米，且条纹频率提高后差异减小。解释原因。
-  \item \textbf{（重建场景）} 点云上出现沿条纹方向、间距恰为一个条纹周期深度的线状台阶。最可能是哪一步出错？如何确认？
-  \item \textbf{（重建场景）} 相位误差图出现频率为条纹频率 $4$ 倍的规则波纹（四步相移）。可能原因是什么？给出两种对策。
-  \item \textbf{（设计）} DMD 投影帧率 $1000$ 帧/秒（二值），相机全局快门。设计一个「二值离焦 + 时间展开」的采集序列，估计总时长，并说明手持速度 $20\,\mathrm{mm/s}$ 时的运动量。
-  \item \textbf{（推导）} 写出 $N=3$、$\delta_k=0,\,2\pi/3,\,4\pi/3$ 时 $\varphi_w$ 的显式公式，并验证它是式~\eqref{eq:ch06-nstep} 的特例。
-  \item \textbf{（推导）} 说明为何 $N$ 步相移会消去第 $2$ 至 $N-2$ 次谐波，而 $N-1$、$N+1$ 次谐波不能消去。
-  \item \textbf{（计算）} 三频外差 $P_1=16$、$P_2=18$、$P_3=21$。分别求 $P_1,P_2$ 与 $P_2,P_3$ 的等效周期；若再对两等效周期做一次外差，等效周期是多少？
-  \item \textbf{（口扫场景）} 牙龈区 $V\approx0.15$，牙面区 $V\approx0.5$，二者 $A$ 相同、$\sigma_I$ 相同。若牙面 $\sigma_\varphi=0.02\,\mathrm{rad}$，求牙龈区 $\sigma_\varphi$，并用正文外差参数估算其跳级概率量级。
-  \item \textbf{（C++/CUDA 实践）} 在 GPU 上实现 $N$ 步相移解算时，如何组织循环与访存？哪些量可以预先计算？说明为何 $A$、$M$、$\varphi$ 应在同一个核函数中输出。
+  \item \textbf{（概念）} 用一句话区分 $\Phi$、$L$、$E$。为何说「图像灰度高」不能直接写成「场景 $L$ 高」？
+  \item \textbf{（计算）} 曝光时间加倍、其他不变，理想线性相机 DN 如何变？若已接近饱和，实际会出现什么，对相位有何害？
+  \item \textbf{（计算）} 某像元电子数从 $10^{4}$ 升到 $4\times10^{4}$（纯光子噪声）。$\SNR$ 如何变？若相位 $\sigma_{\varphi}\propto1/\SNR$，相位标准差如何变？
+  \item \textbf{（重建场景）} 相移四步中第二帧被自动曝光加亮。定性描述解码相位可能出现的错误，并给出配置层修复。
+  \item \textbf{（重建场景）} 手持短曝光导致点云毛刺；加长曝光后运动拖影。提出一种光学–采集折中方案（含投影侧）。
+  \item \textbf{（诊断）} 两台相机立体系统，AE 各自独立。匹配代价在纹理区不稳定。光学与配置上最小改动是什么？
+  \item \textbf{（综合）} 光圈从 $F/8$ 开到 $F/4$，按式~\eqref{eq:ch06-image-irr} 粗估 $E_{\mathrm{img}}$ 倍数；同时列出对 $Z_d$ 与衍射的副作用。
+  \item \textbf{（推导）} 从 $\sigma_\varphi\approx\sqrt{2/N}\,\sigma_I/M$ 推出式~\eqref{eq:ch06-phase-snr-N}，并说明在光子噪声限下，「六步、每帧电子数减半」与「三步、每帧电子数不变」的相位噪声关系。
+  \item \textbf{（计算）} 光子传递实验得 $(\mu,\sigma^2)=(500,140)$、$(3000,765)$（DN、DN$^2$，已扣偏置并已校正为单帧方差）。求 $g$、每 DN 电子数与读出噪声（电子）。
+  \item \textbf{（计算）} 正文自动曝光例中，若跳变发生在第 $0$ 帧（$I_0$），推导 $\delta\varphi$ 的表达式。与第 $1$ 帧跳变相比，误差随 $\varphi$ 的形状有何不同？
+  \item \textbf{（口扫场景）} 某设备演示模式开着自动曝光，帧间亮度波动约 $\pm3\%$，被测牙面 $V\approx0.3$。估算相位系统误差的量级，并与 $\sigma_\varphi=0.02\,\mathrm{rad}$ 的光子噪声比较。
+  \item \textbf{（C++/CUDA 实践）} 相机输出 12 位原始数据，但传输链路为节省带宽先截成高 8 位。给出量化噪声（以原 12 位 DN 计）并判断：在 $A=200$ 电子的暗区（$g=0.25$），这一截位是否会主导噪声？
 \end{enumerate}
 
 \section{习题讲解}
-\label{sec:ch06-solutions}
+\label{sec:ch05-solutions}
 
 \begin{enumerate}
-  \item $\varphi_w=\operatorname{atan2}(I_3-I_1,\,I_0-I_2)=\operatorname{atan2}(40,120)\approx0.32\,\mathrm{rad}$。$A=(180+100+60+140)/4=120$。$M=\tfrac12\sqrt{40^2+120^2}\approx63.2$。调制度 $M/A\approx0.53$。
-  \item $\sigma_\varphi\propto\sqrt{2/N}$，三步比六步为 $\sqrt{6/3}=\sqrt2\approx1.41$。六步需双倍时间，运动更敏感，帧率更低。
-  \item $P_{\mathrm{eq}}=16\times18/(18-16)=144$ 像素，不足以覆盖 $912$ 像素，需要第三个频率或格雷码辅助。噪声放大约 $P_{\mathrm{eq}}/P_1=9$ 倍，因此级次判定要求低频相位噪声小于约 $\pi/9$。
-  \item 次表面散射：光在半透明材料内扩散，条纹被模糊并偏移，相位偏置使深度系统性偏差。提高条纹频率使散射成分更接近常数背景，偏置减小。
-  \item 相位展开级次错一级（格雷码边界误判或多频级次误判）。确认：在包裹相位图上看台阶是否位于 $\pm\pi$ 跳变处；检查格雷码解码在边界上是否与包裹相位不同步。
-  \item 伽马非线性（投影或相机），也可能是 DMD 未同步导致的灰度误差。对策：伽马标定与预失真；增加相移步数；改二值离焦；检查帧同步。
-  \item 例：$3$ 幅格雷码或 $2$ 组低频 + $4$ 步高频相移，约 $7$--$12$ 帧，$7$--$12\,\mathrm{ms}$。移动 $0.14$--$0.24\,\mathrm{mm}$，相对于数十微米的精度目标很大，需要缩短序列或做运动补偿。
-  \item $\varphi_w=\operatorname{atan2}\bigl(\sqrt3(I_2-I_1),\ 2I_0-I_1-I_2\bigr)$。代入 $\sin\delta_k=(0,\tfrac{\sqrt3}2,-\tfrac{\sqrt3}2)$、$\cos\delta_k=(1,-\tfrac12,-\tfrac12)$：$-\sum I_k\sin\delta_k=\tfrac{\sqrt3}2(I_2-I_1)$，$\sum I_k\cos\delta_k=I_0-\tfrac12(I_1+I_2)$，两者同乘 $2$ 即上式。
-  \item 第 $n$ 次谐波在求和中产生 $\sum_k e^{i(n\pm1)\delta_k}$，等间隔相移下当且仅当 $n\pm1\equiv0\pmod N$ 时和为 $N$，否则为零。$2\le n\le N-2$ 时 $n\pm1\in[1,N-1]$，都被消去；$n=N\mp1$ 时 $n\pm1=N$ 不被消去。
-  \item $P_{12}=16\cdot18/2=144$；$P_{23}=18\cdot21/3=126$；$P_{\mathrm{eq}}=144\cdot126/18=1008$。可覆盖千像素量级的视场，每级放大倍数为 $9$ 和 $1008/144=7$。
-  \item $\sigma_\varphi\propto1/M=1/(VA)$，牙龈区 $\sigma_\varphi\approx0.02\times0.5/0.15\approx0.067\,\mathrm{rad}$。放大后 $9\times\sqrt2\times0.067\approx0.85\,\mathrm{rad}$，$\pi/0.85\approx3.7\sigma$，双侧尾概率约 $2\times10^{-4}$。若 $V$ 再低到 $0.1$，约为 $0.1\,\mathrm{rad}$ 情形的 $1\%$ 量级。
-  \item 每线程一个像素；$N$ 帧按平面存放（同一帧连续），使相邻线程访问连续地址、合并访存。$\sin\delta_k$、$\cos\delta_k$ 预先计算放常量内存。三个输出共享同一组累加和 $\sum I_k\cos\delta_k$、$\sum I_k\sin\delta_k$，同一核函数输出可避免重复读 $N$ 帧数据（读数据是带宽瓶颈）；$M$ 同时用作后续质量门限与外差跳级判定。
+  \item $\Phi$ 总功率；$L$ 方向性面亮度；$E$ 入射面功率密度。灰度还经曝光增益非线性，故不能直接等同场景 $L$。
+  \item 线性且未饱和时 DN 约加倍。近饱和则削顶，条纹波峰变平，$V$ 与 $\varphi$ 系统性偏离，高光区尤重。
+  \item $\SNR\propto\sqrt{N}$，故 $\SNR$ 加倍；$\sigma_{\varphi}$ 约减半。
+  \item 第二帧直流/增益被改，四步恒等关系破裂，相位出现与物体无关的偏置或条带。修复：关 AE/AGC，固定曝光，重采。
+  \item 提高投影亮度以在短曝光下保 $N_{\mathrm{ph}}$；或脉冲投影与全局快门同步；或短曝光多帧平均。光学上可略收光圈换 $Z_d$ 仅当模糊主因是离焦而非运动。
+  \item 关闭两侧 AE，手动匹配曝光，使重叠视场 DN 直方图大致可对齐；必要时辐射定标。这比改匹配窗口更对症。
+  \item $F\#$ 减半，$(F\#)^{2}$ 变为 $1/4$，$E_{\mathrm{img}}$ 约 $\times4$。副作用：$Z_d$ 变窄，有效 $\NA$ 变大（衍射斑可变小，但像差/场曲可能更明显），需重验清晰工作距。
+  \item 代入 $M=VA$、$\sigma_I=A/\SNR$ 即得。光子噪声限下 $\sigma_\varphi\approx\sqrt{2/(NN_e)}/V$：六步、$N_e/2$ 时 $NN_e=3N_e$；三步、$N_e$ 时也为 $3N_e$，两者相等。区别在系统项：六步对伽马谐波更不敏感（第~\ref{ch:07}~章），三步帧数少、对运动更友好。
+  \item 斜率 $g=(765-140)/(3000-500)=0.25\,\mathrm{DN/e^-}$，每 DN $4$ 个电子；截距 $140-0.25\times500=15\,\mathrm{DN^2}$，$\sigma_{\mathrm r}=\sqrt{15}/0.25\approx15.5$ 个电子。
+  \item $I_0=A+M\cos\varphi$，$\delta C=\varepsilon(A+M\cos\varphi)$，$\delta S=0$；$\delta\varphi=-S\delta C/(S^2+C^2)=-\frac{\varepsilon}{2}\sin\varphi\,(1/V+\cos\varphi)$。主项由 $\cos\varphi$ 变为 $\sin\varphi$，即波纹相位平移四分之一周期；幅度同为约 $\varepsilon/(2V)$。
+  \item 幅度约 $\varepsilon/(2V)=0.03/0.6=0.05\,\mathrm{rad}$，是光子噪声的约 $2.5$ 倍，而且是系统波纹。实际跳变发生在哪一帧、跳几帧都不确定，误差图会随扫描变化，更难诊断。结论：测量模式必须锁定曝光。
+  \item 截掉低 4 位后 $q=16$ 个原 DN，量化噪声 $16/\sqrt{12}\approx4.6$ DN，相当于 $18$ 个电子。暗区光子噪声 $\sqrt{200}\approx14$ 电子，量化噪声已超过它，主导暗区噪声；亮区影响较小。对策：传输前做线性到平方根的压缩编码（与泊松噪声匹配），或保留全位深。
 \end{enumerate}

@@ -1,201 +1,202 @@
-\chapter{深度传感对照：共聚焦 / OCT / ToF}
+\chapter{色散、色差、点扩散与 MTF}
 \label{ch:09}
 
-本章为选读。它不展开这些技术的全部细节，而是用前面各章的光学语言说明：它们各自靠什么获得深度，分辨率与量程由什么决定，以及与结构光、立体视觉的能力边界在哪里。
-
 \section{效果}
-\label{sec:ch09-effect}
+\label{sec:ch08-effect}
 
 读完本章，你应能：
 \begin{enumerate}
-  \item 说明共聚焦针孔如何实现光学层切，以及轴向分辨率与数值孔径的关系；
-  \item 用第~\ref{ch:03}~章的相干长度解释 OCT 的轴向分辨率与量程；
-  \item 区分脉冲 ToF 与相位（调幅连续波）ToF，写出相位 ToF 的距离公式与无模糊量程；
-  \item 用一张对照表比较五类深度传感的分辨率、量程、对材料的敏感性与系统代价；
-  \item 理解口内扫描常见选型背后的取舍。
+  \item 说明材料色散如何产生轴向色差与垂轴色差，以及为何结构光常选单色或窄带光源；
+  \item 从 $\PSF$ 出发定义 $\mathrm{OTF}$ 与 $\MTF$，写出衍射限截止频率，并把离焦、像元采样等因素作为 $\MTF$ 级联相乘；
+  \item 把「投影镜头 $\to$ 物面 $\to$ 相机镜头 $\to$ 像元」的链路 $\MTF$ 与第~\ref{ch:07}~章的调制幅 $M$ 和相位噪声 $\sigma_\varphi$ 联系起来；
+  \item 解释边缘与高曲率处混合像素的成因；
+  \item 为一台结构光设备选择条纹周期并做一份模糊预算。
 \end{enumerate}
 
 \section{原理}
-\label{sec:ch09-principle}
+\label{sec:ch08-principle}
 
-\subsection{共聚焦：用针孔挑出焦面}
+\subsection{色散与色差}
 
-共聚焦系统把点光源聚焦到样品，再把返回光聚焦到与光源共轭的针孔上。焦面上的点回到针孔中心，全部通过；焦面外的点在针孔处是一个弥散斑，只有少部分通过。沿光轴扫描焦面（或扫描物体），记录每个横向位置的信号最大值所在深度，即得表面高度 \citep{WilsonSheppard1984}。
-
-轴向响应宽度（层切厚度）近似
-\begin{equation}
-  \Delta z_{\mathrm{conf}}\sim\frac{\lambda}{\mathrm{NA}^2}
-  \label{eq:ch09-conf}
-\end{equation}
-（常数因子依赖针孔大小、折射率与定义：理想小针孔、小 $\NA$ 时轴向响应半高宽约 $1.3\,n\lambda/\NA^2$，针孔变大则变宽；此处只作量级比较）。与第~\ref{ch:01}~章的景深同源：$\NA$ 越大，焦面外越快模糊，层切越薄。
-
-要点：
-\begin{itemize}
-  \item 深度来自\emph{焦点位置}，不需要三角基线，因此可以在很窄的探头里工作，遮挡少（照明与观测同轴）。
-  \item 量程由焦面扫描行程决定；精度由轴向响应宽度与 $\SNR$ 决定，峰值插值可达响应宽度的一小部分。
-  \item 并行化：用针孔阵列或光栅图案配合深度扫描，可一次获得一片区域，代价是串扰与扫描时间。
-  \item 半透明材料内部的散射光被针孔大量拒绝，这是共聚焦对次表面散射天然较鲁棒的原因。
-\end{itemize}
-
-\subsection{OCT：低相干干涉}
-
-光学相干层析（OCT）把样品臂与参考臂的反射光在探测器上干涉 \citep{Huang1991OCT}。光源是宽带低相干光（第~\ref{ch:03}~章）：只有两臂光程差小于相干长度 $l_c$ 时才出现干涉条纹。因此干涉信号的包络定位了「样品中哪一深度的反射与参考臂等光程」。
-
-对高斯谱、中心波长 $\lambda_0$、半高宽 $\Delta\lambda$ 的光源，轴向分辨率（空气中）为
-\begin{equation}
-  \Delta z_{\mathrm{OCT}}=\frac{2\ln2}{\pi}\,\frac{\lambda_0^{2}}{\Delta\lambda}.
-  \label{eq:ch09-oct}
-\end{equation}
-例：$\lambda_0=840\,\mathrm{nm}$、$\Delta\lambda=50\,\mathrm{nm}$，$\Delta z\approx6.2\,\mu\mathrm{m}$；在折射率 $n$ 的介质中再除以 $n$。注意它与\emph{横向}分辨率解耦：横向由聚焦 $\NA$ 决定，轴向由光谱宽度决定。
-
-\begin{itemize}
-  \item \textbf{时域 OCT}：机械扫描参考臂长度。
-  \item \textbf{频域 OCT}：参考臂固定，用光谱仪或扫频光源记录干涉光谱，傅里叶变换得到整条深度剖面。量程由光谱采样间隔决定，$z_{\max}\approx\lambda_0^2/(4\,\delta\lambda)$（$\delta\lambda$ 为每个光谱采样的宽度）。
-\end{itemize}
-OCT 的独特能力是\emph{看进去}：给出组织内部多层界面的反射，而不仅是表面。代价是量程浅（毫米级）、需要逐点或逐线扫描、系统复杂。
-
-\subsection{ToF：飞行时间}
-
-\textbf{脉冲 ToF}：发出短脉冲，测量往返时间 $\Delta t$，$Z=c\Delta t/2$（本章 $c$ 为光速，不同于第~\ref{ch:01}~章的弥散圆直径）。$1\,\mathrm{mm}$ 深度对应约 $6.7\,\mathrm{ps}$ 往返时间，可见毫米级精度需要皮秒级时间分辨。
-
-\textbf{相位 ToF（调幅连续波）}：光源强度按调制频率 $F_m$（角频率 $\omega_m=2\pi F_m$；注意：$F_m$ 是强度包络的调制频率，通常为数十兆赫兹，远低于光频 $\nu$）正弦调制。返回光相对发射光有相位延迟 $\phi_m$，则
-\begin{equation}
-  Z=\frac{c}{4\pi F_m}\,\phi_m,\qquad Z_{\mathrm{amb}}=\frac{c}{2F_m}.
-  \label{eq:ch09-tof}
-\end{equation}
-$Z_{\mathrm{amb}}$ 为无模糊量程：$F_m=20\,\mathrm{MHz}$ 时约 $7.5\,\mathrm{m}$。相位通常由每像素四个相位采样求得，形式与第~\ref{ch:06}~章的四步相移完全相同 \citep{LangeSeitz2001ToF}，于是深度噪声
+透镜材料的折射率随波长变化，$n=n(\lambda)$，称为色散。可见光波段中，短波长折射率通常更大，因此薄透镜的焦距
 \[
-  \sigma_Z\approx\frac{c}{4\pi F_m}\,\sigma_{\phi_m},
+  \frac{1}{f(\lambda)}=\bigl(n(\lambda)-1\bigr)\Bigl(\frac{1}{r_1}-\frac{1}{r_2}\Bigr)
 \]
-$\sigma_{\phi_m}$ 同样反比于调制幅与 $\SNR$。这里的「条纹」不在空间而在时间上：$c/(2F_m)$ 扮演条纹周期的角色。即便 $F_m=100\,\mathrm{MHz}$，周期也有 $1.5\,\mathrm{m}$，$0.01\,\mathrm{rad}$ 相位噪声对应约 $2.4\,\mathrm{mm}$。这解释了 ToF 在近距离精细测量上的根本劣势。多频 ToF 展开相位的思路与第~\ref{ch:06}~章多频外差相同。
+随波长变化：蓝光焦距短于红光。（本章 $c$ 沿用第~\ref{ch:01}~章，表示弥散圆直径；第~\ref{ch:10}~章的 $c$ 表示光速。）由此产生两类色差：
+\begin{itemize}
+  \item \textbf{轴向色差}：不同波长的像面沿光轴前后错开。宽带照明下，任何一个像面都只对某一波段清晰，其余波段弥散，等效于叠加了波长相关的离焦。
+  \item \textbf{垂轴色差（倍率色差）}：不同波长的放大率不同，视场边缘的像点按颜色径向错开。它在几何上等价于\emph{波长相关的径向畸变}（第~\ref{ch:02}~章）。
+\end{itemize}
+消色差设计用不同色散的玻璃组合，使两个波长焦点重合，剩余的二级光谱仍存在 \citep{HechtOptics}。
 
-ToF 的典型误差：多径干扰（墙角、凹面中光经过多次反射，等价于结构光的互反射）、次表面散射造成的延迟、混合像素（边缘飞点），以及温度引起的相位漂移。
+\textbf{对重建的含义。} 若相机按白光或某一波长标定，而工作时使用另一波长，焦距与畸变系数都会偏移，第~\ref{ch:08}~章已说明这会进入尺度项与畸变项。彩色编码结构光同时使用多个波长，每个颜色通道实际是一台内参略有不同的相机。
 
-\subsection{能力边界对照}
+\textbf{单色源与带通。} 激光或窄带 LED 加带通滤光片可把色差压到近乎可忽略，并拒绝环境光（提高第~\ref{ch:06}~章的 $\SNR$）。代价：激光相干性高，带来散斑（第~\ref{ch:04}~章、第~\ref{ch:05}~章）；LED 带宽数十纳米，相干长度短，散斑弱，但仍有残余色差。口内设备常用蓝光 LED：短波长衍射截止更高、在牙体中穿透更浅（第~\ref{ch:07}~章），且带宽适中。
 
-\begin{table}[htbp]
-  \centering
-  \small
-  \begin{tabular}{@{}p{0.10\textwidth}p{0.12\textwidth}p{0.19\textwidth}p{0.19\textwidth}p{0.22\textwidth}@{}}
-    \toprule
-    方式 & 深度来源 & 轴向分辨率（量级） & 量程（量级） & 主要限制 \\
-    \midrule
-    共聚焦 & 焦点位置 & $1$--$20\,\mu\mathrm{m}$ & $0.1$--$20\,\mathrm{mm}$ & 扫描时间、$\NA$ 与视场 \\
-    OCT & 相干门 & $2$--$10\,\mu\mathrm{m}$ & $0.5$--$5\,\mathrm{mm}$ & 量程浅、逐点扫描 \\
-    结构光 & 三角+相位 & $3$--$50\,\mu\mathrm{m}$ & $1$--$500\,\mathrm{mm}$ & $\MTF$、散射、遮挡 \\
-    立体 & 三角+匹配 & $10\,\mu\mathrm{m}$--$1\,\mathrm{mm}$ & $1\,\mathrm{mm}$--$20\,\mathrm{m}$ & 纹理、基线 \\
-    ToF & 往返时间 & $1$--$30\,\mathrm{mm}$ & $0.1$--$20\,\mathrm{m}$ & 多径、时间分辨 \\
-    \bottomrule
-  \end{tabular}
-  \caption{深度传感方式能力边界（数量级示意，非具体产品指标）。}
-  \label{tab:ch09-compare}
-\end{table}
+\subsection{PSF、OTF 与 MTF}
 
-图~\ref{fig:ch09-compare} 把同样的信息画在分辨率–量程平面上。可以看到一条大致规律：\emph{深度分辨率与量程之比}大体被各自的「编码尺度」锁定——共聚焦是焦深，OCT 是相干长度，结构光是条纹周期与基线，ToF 是调制周期。
+线性、空间不变近似下，像是物与 $\PSF$ 的卷积：
+\begin{equation}
+  I_{\mathrm{img}}(x,y)=\bigl(I_{\mathrm{obj}}*h\bigr)(x,y),
+  \label{eq:ch09-conv}
+\end{equation}
+$h$ 为强度 $\PSF$。在频域中卷积变为相乘。设空间频率为 $(\xi,\eta)$（单位：周期/毫米），则
+\begin{equation}
+  \tilde I_{\mathrm{img}}(\xi,\eta)=H(\xi,\eta)\,\tilde I_{\mathrm{obj}}(\xi,\eta),\qquad
+  H=\frac{\mathcal F\{h\}}{\mathcal F\{h\}(0,0)}.
+  \label{eq:ch09-otf}
+\end{equation}
+$H$ 称为光学传递函数（OTF），其模 $|H|$ 即 $\MTF$，辐角为相位传递函数（PTF）。$\MTF$ 的物理意义直接：一个空间频率为 $\xi$、调制度为 $V_{\mathrm{in}}$ 的正弦图案经过系统后，调制度变为 $\MTF(\xi)V_{\mathrm{in}}$。这正是结构光关心的量。
+
+\textbf{衍射限 MTF。} 非相干照明、圆形光瞳、无像差时 \citep{GoodmanFourierOptics}：
+\begin{equation}
+  \MTF(\xi)=\frac{2}{\pi}\Bigl[\arccos\hat\xi-\hat\xi\sqrt{1-\hat\xi^{2}}\Bigr],\qquad
+  \hat\xi=\frac{\xi}{\xi_c},\qquad \xi_c=\frac{1}{\lambda N_{F,w}},
+  \label{eq:ch09-diffmtf}
+\end{equation}
+$N_{F,w}=N_F(1+|m|)$ 为像方工作 F 数，$N_F$ 为标称 F 数（第~\ref{ch:01}~章）。$\xi_c$ 以上 $\MTF$ 为零，任何信息都传不过去。例：$\lambda=450\,\mathrm{nm}$、$N_F=8$、$|m|=0.4$（$N_{F,w}=11.2$）时 $\xi_c\approx198\,$周期/毫米，与第~\ref{ch:04}~章通带例一致；相机像元 $3\,\mu\mathrm{m}$ 的奈奎斯特频率约 $167\,$周期/毫米。
+
+PTF 的非零部分（彗差等非对称像差造成）对结构光尤其危险：它让条纹整体平移，直接变成相位偏置，而不是对比度损失。
+
+\subsection{MTF 级联}
+
+若干独立的模糊环节串联时，总 $\PSF$ 为各 $\PSF$ 的卷积，总 $\MTF$ 为各 $\MTF$ 的乘积：
+\begin{equation}
+  \MTF_{\mathrm{sys}}(\xi)=\MTF_{\mathrm{diff}}(\xi)\cdot\MTF_{\mathrm{aber}}(\xi)\cdot\MTF_{\mathrm{defocus}}(\xi)\cdot\MTF_{\mathrm{pix}}(\xi)\cdots
+  \label{eq:ch09-cascade}
+\end{equation}
+\begin{itemize}
+  \item \textbf{离焦}：几何近似下弥散圆直径 $c$（第~\ref{ch:01}~章）对应的均匀圆盘 $\PSF$，其 $\MTF=2J_1(\pi c\xi)/(\pi c\xi)$，在 $\xi\approx1.22/c$ 处首次过零并出现\emph{对比度反转}（负值区相位翻转 $\pi$）。
+  \item \textbf{像元孔径}：宽 $p$ 的方形像元相当于矩形积分，$\MTF_{\mathrm{pix}}=|\operatorname{sinc}(p\xi)|$；在奈奎斯特频率 $1/(2p)$ 处约为 $0.64$。
+  \item \textbf{其他}：运动模糊（矩形核，沿运动方向）、传感器串扰、图像压缩等，皆可按同样方式相乘。
+\end{itemize}
+级联的直观结论：系统 $\MTF$ 永远不高于最差的一环，并且多个「看起来都还行」的环节相乘后会很快变差（图~\ref{fig:ch09-mtf}）。
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.85\textwidth]{fig-sensor-compare.pdf}
-  \caption{各深度传感方式在分辨率–量程平面上的大致位置（概念草图，数量级示意）。}
-  \label{fig:ch09-compare}
+  \includegraphics[width=0.98\textwidth]{fig-mtf-curve.pdf}
+  \caption{左：衍射、离焦与像元 MTF 级联；右：链路 MTF 与相对深度噪声随条纹频率变化，存在最优区间（概念草图，非精确工程图）。}
+  \label{fig:ch09-mtf}
 \end{figure}
 
-\subsection{例：OCT 轴向分辨率与深度范围}
+\subsection{链路 MTF、调制幅与相位噪声}
 
-式~\eqref{eq:ch09-oct} 的轴向分辨率（高斯谱、半高全宽定义）
+结构光中条纹经过两次成像：投影镜头把调制器上的图案成像到物面，相机镜头再把物面成像到传感器。物面的反射（含次表面散射）在中间又乘上一个「材料 $\MTF$」。设投影端条纹调制度为 $V_0$（第~\ref{ch:07}~章），相机所见调制度 $V=M/A$，平均灰度为 $A$，物面条纹频率为 $\xi$，则相机所见调制幅约为
+\begin{equation}
+  M(\xi)\approx A\,V_0\,\MTF_{\mathrm{proj}}(\xi)\,\MTF_{\mathrm{mat}}(\xi)\,\MTF_{\mathrm{cam}}(\xi).
+  \label{eq:ch09-chain}
+\end{equation}
+代入第~\ref{ch:07}~章式~\eqref{eq:ch07-phase-noise}，$\sigma_\varphi\approx\sqrt{2/N}\,\sigma_I/M$。相位误差折算为物面横向位置误差为 $\delta x=\sigma_\varphi/(2\pi\xi)$，再经第~\ref{ch:08}~章的三角关系变成深度误差。于是
+\begin{equation}
+  \delta Z\ \propto\ \frac{1}{\xi\,\MTF_{\mathrm{link}}(\xi)}.
+  \label{eq:ch09-tradeoff}
+\end{equation}
+提高条纹频率 $\xi$ 一方面使每弧度相位对应的位移更小（分母中的 $\xi$），另一方面使 $\MTF_{\mathrm{link}}$ 下降。二者乘积在某个中间频率处取最大，即深度噪声最小（图~\ref{fig:ch09-mtf} 右）。这给出选择条纹周期的光学依据，而不是「越密越好」。
+
+\subsection{混合像素}
+
+在深度不连续的边缘（牙齿轮廓、器械边缘），一个像元的 $\PSF$ 覆盖区域同时包含前景与背景。由于前后景的条纹相位不同，像元接收到的是两个复相量 $M_1e^{i\varphi_1}$ 与 $M_2e^{i\varphi_2}$ 按面积与亮度加权之和，求出的相位介于两者之间（甚至因相量抵消而 $M$ 很小），重建出漂浮在前后景之间的「飞点」。
+高曲率表面虽然连续，但 $\PSF$ 覆盖区域内相位非线性变化，同样产生偏置，表现为尖锐边缘被「磨圆」、窄槽被「填浅」。$\PSF$ 越宽（离焦、低 $\MTF$），受影响的带宽越大。诊断特征：调制幅 $M$ 在边缘处骤降；相位梯度异常大。
+
+\subsection{例：离焦怎样一步步吃掉调制度}
+
+把模糊换算成调制度损失，就能直接接到第~\ref{ch:07}~章的相位噪声上。几何光学下，离焦 $\Delta z$ 在物方形成直径约
 \[
-  \Delta z=\frac{2\ln2}{\pi}\,\frac{\lambda_0^2}{\Delta\lambda}.
+  b\approx2\,\mathrm{NA}_o\,|\Delta z|
 \]
-数量级示意：$\lambda_0=840\,\mathrm{nm}$、$\Delta\lambda=50\,\mathrm{nm}$，$\Delta z\approx0.441\times0.706/0.05\approx6.2\,\mu\mathrm{m}$（空气中）。组织中光程按折射率 $n\approx1.38$ 缩短，物理深度分辨率约 $6.2/1.38\approx4.5\,\mu\mathrm{m}$。注意它只取决于光谱宽度，与物镜 $\mathrm{NA}$ 无关；横向分辨率才由 $\mathrm{NA}$ 决定。这是 OCT 能用低 $\mathrm{NA}$（大景深）同时得到微米级轴向分辨率的原因。
-
-\textbf{频域 OCT 的深度范围。} 频域 OCT 用光谱仪记录干涉谱，深度剖面是谱的傅里叶变换。光谱仪每像素的波长间隔 $\delta\lambda_s$ 决定最大成像深度（单侧）
+的均匀圆斑（$\mathrm{NA}_o$ 为物方数值孔径；适用于离焦斑远大于衍射斑时）。均匀圆斑的 $\MTF$ 为
 \[
-  z_{\max}=\frac{\lambda_0^2}{4n\,\delta\lambda_s}.
+  \MTF_{\mathrm{def}}(\xi)=\left|\frac{2J_1(\pi b\xi)}{\pi b\xi}\right|,
 \]
-推导要点：干涉谱在波数 $k=2\pi/\lambda$ 上以 $\cos(2kz)$ 振荡，采样间隔 $\delta k=2\pi\delta\lambda_s/\lambda_0^2$，奈奎斯特条件 $2z\,\delta k\le\pi$。例：$2048$ 像素覆盖 $100\,\mathrm{nm}$，$\delta\lambda_s\approx0.049\,\mathrm{nm}$，空气中 $z_{\max}\approx0.706/(4\times4.9\times10^{-5})\,\mu\mathrm{m}\approx3.6\,\mathrm{mm}$。深度范围与分辨率共用同一组光谱像素：像素数固定时，覆盖更宽光谱（分辨率更好）就意味着 $\delta\lambda_s$ 更大、深度更浅。此外，光谱仪本身的有限分辨率使信号随深度衰减（称为滚降），实际可用深度短于 $z_{\max}$。
+小自变量时 $\approx1-(\pi b\xi)^2/8$。级联到式~\eqref{eq:ch09-cascade} 中，相机所见调制度 $V\approx V_0\cdot\MTF_{\mathrm{tot}}(\xi)$，相位噪声随 $1/V$ 增长。
 
-\subsection{例：共聚焦层析厚度}
+\textbf{数量级示意。} 物方 $\mathrm{NA}_o=0.03$，条纹物方周期 $0.2\,\mathrm{mm}$（$\xi=5$ 周/mm）：
+\begin{center}
+\small
+\begin{tabular}{cccc}
+  \hline
+  $|\Delta z|$ & $b$ & $\MTF_{\mathrm{def}}$ & $\sigma_\varphi$ 相对焦面\\
+  \hline
+  $0.5\,\mathrm{mm}$ & $30\,\mu\mathrm{m}$ & $0.97$ & $\times1.03$\\
+  $1\,\mathrm{mm}$ & $60\,\mu\mathrm{m}$ & $0.89$ & $\times1.1$\\
+  $2\,\mathrm{mm}$ & $120\,\mu\mathrm{m}$ & $0.62$ & $\times1.6$\\
+  $3\,\mathrm{mm}$ & $180\,\mu\mathrm{m}$ & $0.28$ & $\times3.5$\\
+  \hline
+\end{tabular}
+\end{center}
+（$\pi b\xi=3.83$ 即 $b=244\,\mu\mathrm{m}$ 时 $\MTF$ 第一次降到零，条纹完全消失，之后出现反相的伪调制。）这里只算了相机侧离焦；投影侧同样离焦，两者相乘，实际下降更快。表中 $\Delta z=2\,\mathrm{mm}$ 一行与第~\ref{ch:01}~章算出的景深量级相当：景深边缘不是「清晰与模糊」的分界，而是相位噪声开始成倍增长的位置。
 
-按正文针孔足够小、$\mathrm{NA}$ 不大时的近似，轴向层析厚度约 $1.3\,n\lambda/\mathrm{NA}^2$。$\mathrm{NA}=0.3$、$\lambda=0.45\,\mu\mathrm{m}$、空气中：$1.3\times0.45/0.09\approx6.5\,\mu\mathrm{m}$。$\mathrm{NA}$ 减半到 $0.15$，层析厚度变为四倍约 $26\,\mu\mathrm{m}$。与 OCT 对比：共聚焦的轴向分辨率由 $\mathrm{NA}^2$ 决定，要微米级就要大 $\mathrm{NA}$，于是工作距离短、视场小、需要轴向扫描；口内共聚焦方案用平行多点阵列与轴向扫描换取视场，这是它与相移结构光在帧数与机械复杂度上的主要差别。
+\subsection{例：混合像素的相量算一遍}
 
-\subsection{例：ToF 的多径与多频}
-
-本章已算过 $F_m=100\,\mathrm{MHz}$ 时无歧义距离 $1.5\,\mathrm{m}$ 与相位噪声对应的距离噪声。这里补两个系统项。
-
-\textbf{多径。} 像素同时收到直接回波（幅值 $1$）与经墙角等二次反射的回波（幅值 $\beta$），后者往返总路程多出 $\Delta L$。连续波 ToF 的相位正比于往返路程，二者相位差 $\Delta\phi=2\pi F_m\Delta L/c$（此处 $c$ 为光速）。与混合像素同理，合成相位
+边缘像素中，前景面积占比 $\alpha$，前景与背景调制幅 $M_1$、$M_2$，相位差 $\Delta\varphi$。像素所得相量
 \[
-  \delta\phi=\operatorname{atan2}\bigl(\beta\sin\Delta\phi,\ 1+\beta\cos\Delta\phi\bigr).
+  \tilde M e^{i\tilde\varphi}=\alpha M_1e^{i\varphi_1}+(1-\alpha)M_2e^{i\varphi_2}.
 \]
-数量级示意：$\beta=0.2$、$\Delta L=0.3\,\mathrm{m}$，$\Delta\phi\approx0.63\,\mathrm{rad}$，$\delta\phi\approx0.10\,\mathrm{rad}$，换算距离 $c\,\delta\phi/(4\pi F_m)\approx2.4\,\mathrm{cm}$，比典型随机噪声大一个数量级，且总是使距离偏远。多径误差随 $F_m$ 变化（$\Delta\phi$ 正比于 $F_m$），这正是多频测量能识别多径的依据。
+取 $\varphi_1=0$、$\alpha=0.5$、$M_1=3M_2$、$\Delta\varphi=1\,\mathrm{rad}$：
+\[
+  \tilde\varphi=\operatorname{atan2}\bigl(\sin1,\ 3+\cos1\bigr)=\operatorname{atan2}(0.841,\,3.540)\approx0.233\,\mathrm{rad}.
+\]
+面积各占一半，相位却只偏向背景 $0.233$ 而不是 $0.5\,\mathrm{rad}$：亮的一方「拉」住了相位。合成幅值 $\tilde M=0.5\times3.638M_2\approx1.82M_2$，比两者平均 $2M_2$ 低约 $9\%$，变化不大，因而单靠 $M$ 门限难以发现这种像素。若 $M_1=M_2$、$\Delta\varphi=\pi$，相量完全抵消，$\tilde M\to0$，此时 $M$ 门限能剔除它。所以混合像素有两种：抵消型（$M$ 骤降，易剔除）与偏置型（$M$ 基本正常，相位偏到一侧，需要用深度不连续检测或相位梯度判据）。
 
-\textbf{多频去歧义。} 用 $80\,\mathrm{MHz}$ 与 $100\,\mathrm{MHz}$ 两个频率，二者公约数 $20\,\mathrm{MHz}$，组合后无歧义距离 $c/(2\times20\,\mathrm{MHz})=7.5\,\mathrm{m}$。逻辑与第~\ref{ch:06}~章外差完全相同，噪声放大与跳级风险也同理。
+\subsection{去卷积能救回多少}
+
+既然模糊是卷积（式~\eqref{eq:ch09-conv}），能否除以光学传递函数复原？对结构光，关心的只是条纹基频 $\xi_0$ 处的幅度：除以 $\MTF(\xi_0)$ 能把 $M$ 恢复，但噪声同样被放大 $1/\MTF(\xi_0)$ 倍，$\SNR$ 不变，相位噪声也就不变。去卷积无法凭空恢复信噪比，它只在两种情况下有用：(i) 模糊在空间上变化（例如混合像素附近），复原能改善几何偏置；(ii) 需要的是图像外观而不是相位。对相位而言，真正的出口是让 $\MTF(\xi_0)$ 本身变大：选更长的条纹周期、更大的景深或对焦更准。
 
 \section{限度}
-\label{sec:ch09-limits}
+\label{sec:ch08-limits}
 
 \begin{itemize}
-  \item 式~\eqref{eq:ch09-conf}、\eqref{eq:ch09-oct} 的常数因子依赖定义（半高宽、针孔尺寸、谱形），只能做量级比较。
-  \item 对照表忽略了速度、成本、体积与安全（激光功率）等维度，它们往往决定实际选型。
-  \item 介质折射率改变光程：OCT 与 ToF 测得的是光程而非几何距离；半透明材料中共聚焦与结构光也会受到影响。
-  \item 本章不涉及光度立体、焦点堆栈（depth from focus）等其他方法，它们与共聚焦或立体的原理相近。
+  \item 空间不变假设：真实镜头的 $\PSF$ 随视场与深度变化，$\MTF$ 应在多个视场点、多个深度分别给出；本章的单一曲线只是代表。
+  \item 非相干成像假设：激光照明下系统对复振幅线性，传递函数是相干传递函数（截止频率为非相干的一半），且出现散斑。
+  \item 级联相乘只对相互独立、线性的模糊环节成立；传感器饱和、伽马、二值化之后不再适用。
+  \item 几何离焦 $\MTF$ 在弥散圆接近衍射斑时失效，需用波像差计算。
+  \item 「材料 $\MTF$」是对次表面散射的粗略等效，忽略了它带来的相位偏移（第~\ref{ch:07}~章）。
 \end{itemize}
 
 \section{对象}
-\label{sec:ch09-object}
+\label{sec:ch08-object}
 
-\textbf{口内扫描常见选型（数量级示意）。} 口内场景的约束是：工作距十余毫米、深度范围数毫米到十余毫米、探头狭小、手持移动、表面湿润且半透明、精度目标数十微米。
-\begin{itemize}
-  \item \textbf{结构光}（相机+投影或多相机+条纹）：帧率高，单帧覆盖面积大，便于拼接；短板是散射与高反（第~\ref{ch:06}~章），以及基线受探头尺寸限制（第~\ref{ch:07}~章）。
-  \item \textbf{并行共聚焦}：同轴、无遮挡、对散射较鲁棒，适合深窄的龈沟与邻面；但需要焦面扫描，单帧时间较长，对运动敏感，探头光学更复杂。
-  \item \textbf{OCT}：能看到釉质下的结构（龋损、修复体界面），研究价值大；作为全牙弓表面扫描，量程与速度不足。
-  \item \textbf{ToF}：精度远不够口内要求，主要见于房间尺度或人体尺度的测量。
-\end{itemize}
-不同产品的取舍差异主要在：用多少帧换精度、用什么方式对付散射与高反、探头允许的基线与景深。
+\textbf{选条纹周期。} 设口内设备（数量级示意）：相机像元 $3\,\mu\mathrm{m}$、放大率 $0.3$，则物面像元约 $10\,\mu\mathrm{m}$；工作 F 数 $8$、蓝光。物面上条纹周期 $P_{\mathrm{obj}}$ 若取 $0.1\,\mathrm{mm}$（$10\,$周期/毫米），相当于每周期约 $10$ 个物面像元，像元 $\MTF$ 接近 $1$，衍射 $\MTF$ 仍高；但景深边缘弥散圆若达 $60\,\mu\mathrm{m}$（物面），离焦 $\MTF=2J_1(x)/x$ 在 $x=\pi c\xi\approx1.9$ 处约为 $0.6$，投影与相机两侧同时离焦则约 $0.36$，再叠加牙体散射，$M$ 可能只剩焦面处的三分之一左右。于是常见做法是：以\emph{景深边缘}而非焦面处的链路 $\MTF$ 来选周期，让边缘处 $M$ 仍高于展开可靠所需的阈值。
 
-\subsection{例：用数字排除不合适的模态}
+\textbf{模糊预算表。} 把每个环节在选定频率处的 $\MTF$ 列出（焦面 / 景深边缘两列）：投影衍射、投影离焦、材料、相机衍射、相机离焦、像元、运动。乘积给出 $M$ 的预期范围，再用式~\eqref{eq:ch07-phase-noise} 得到 $\sigma_\varphi$，用第~\ref{ch:08}~章的式~\eqref{eq:ch08-error} 得到 $\delta Z$。若结果超标，可从表中直接看出最差的一环：是离焦（需要更大景深或更小孔径）、是运动（需要更短曝光）、还是材料（需要更短波长或更低频率）。
 
-以口扫的典型要求（深度噪声约 $10\,\mu\mathrm{m}$ 以内、工作距离十几毫米、视场十几毫米）为基准，把本章的例子放在一起比较，数量级示意：
-\begin{itemize}
-  \item \textbf{连续波 ToF}：$F_m=100\,\mathrm{MHz}$、相位噪声 $0.01\,\mathrm{rad}$ 时距离噪声约 $2.4\,\mathrm{mm}$，与要求差两个多数量级；要降到 $10\,\mu\mathrm{m}$，需要相位噪声 $4\times10^{-5}\,\mathrm{rad}$ 或调制频率高两个数量级，都不现实。排除。
-  \item \textbf{OCT}：轴向分辨率约 $5\,\mu\mathrm{m}$ 满足要求，但频域 OCT 单次深度范围几毫米，口内曲面高差可达十几毫米，需要额外的深度追踪；且逐点或逐线扫描使得覆盖十几毫米视场的速度受限。更适合需要看表层下结构（如龋损、牙周组织）的场合。
-  \item \textbf{共聚焦}：层析厚度约 $20\,\mu\mathrm{m}$ 时需 $\mathrm{NA}\approx0.17$，覆盖 $15\,\mathrm{mm}$ 深度需上千个轴向位置；可行，但代价在扫描机构与帧率上。
-  \item \textbf{相移结构光}：第~\ref{ch:00}~章走查得单帧随机噪声约 $1\,\mu\mathrm{m}$，主要风险在系统项（伽马、运动、标定）。
-\end{itemize}
-这种比较的意义在于先用数量级排除，再对剩下的候选做细致的误差预算，而不是比较各模态的「优缺点」列表。
+\textbf{色差的实际影响。} 白光相机配蓝光投影：标定若用白光棋盘格，焦距与畸变系数会与蓝光工作状态略有差别，平面重建出现轻微碗形或尺度偏差。对策是用工作波长的照明进行标定，或在镜头设计中对工作波段做色差校正。
 
 \section*{本章收束}
-共聚焦用焦点，OCT 用相干门，ToF 用往返时间，结构光与立体用三角。每种方法都有一个「编码尺度」，分辨率是这个尺度的一小部分，量程是它的若干倍。相位 ToF 与相移结构光在数学上同构，只是一个在时间上、一个在空间上编码。口内扫描以结构光与并行共聚焦为主，取舍落在速度、散射鲁棒性与探头尺寸上。
+色散让焦距与畸变随波长变化，单色或窄带光源是结构光的常见选择。$\MTF$ 把模糊量化为「每个空间频率剩下多少调制度」，各环节级联相乘。调制幅 $M$ 是链路 $\MTF$ 的直接结果，因此条纹周期存在由光学决定的最优区间。边缘与高曲率处的混合像素来自 $\PSF$ 的有限宽度，是不可平均的系统误差。
 
 \section{习题}
-\label{sec:ch09-exercises}
+\label{sec:ch08-exercises}
 
 \begin{enumerate}
-  \item \textbf{（计算）} 共聚焦物镜 $\NA=0.3$、$\lambda=488\,\mathrm{nm}$，估算层切厚度量级。若改为 $\NA=0.1$ 呢？对口内全牙扫描意味着什么？
-  \item \textbf{（计算）} OCT 光源 $\lambda_0=1300\,\mathrm{nm}$、$\Delta\lambda=100\,\mathrm{nm}$，求空气中与牙釉质（$n\approx1.6$）中的轴向分辨率。
-  \item \textbf{（计算）} 相位 ToF $F_m=60\,\mathrm{MHz}$，求无模糊量程；若相位噪声 $0.005\,\mathrm{rad}$，深度噪声多少？与口内精度目标对比。
-  \item \textbf{（重建场景）} 在深而窄的龈沟中，结构光扫描缺失严重而共聚焦扫描较完整。从光路几何解释。
-  \item \textbf{（重建场景）} ToF 相机拍摄墙角时，角落深度系统性偏大且角落被「磨圆」。原因是什么？它与结构光中的哪种误差同源？
-  \item \textbf{（设计）} 若要检测修复体边缘下方的微小间隙（数十微米、位于表面下方），应考虑哪种方法？说明理由与代价。
-  \item \textbf{（推导）} 从频域 OCT 的干涉谱 $\cos(2kz)$ 与波数采样间隔出发，推导 $z_{\max}=\lambda_0^2/(4n\,\delta\lambda_s)$。
-  \item \textbf{（计算）} 中心波长 $1310\,\mathrm{nm}$、带宽 $100\,\mathrm{nm}$ 的 OCT，求空气与组织（$n=1.38$）中的轴向分辨率，并与正文 $840\,\mathrm{nm}$ 系统比较。
-  \item \textbf{（口扫场景）} 若要用共聚焦方式在 $\lambda=0.45\,\mu\mathrm{m}$ 下得到 $20\,\mu\mathrm{m}$ 层析厚度，$\mathrm{NA}$ 应取多少？若口内需要 $15\,\mathrm{mm}$ 深度范围，按层析厚度的一半为轴向步距，需要多少个轴向位置？
-  \item \textbf{（医学重建）} 正文多径例中，若改用 $F_m=20\,\mathrm{MHz}$ 测同一场景，$\delta\phi$ 与距离误差各为多少？据此说明多频如何用于识别多径。
-  \item \textbf{（C++/CUDA 实践）} 频域 OCT 重建需要把光谱从等波长间隔重采样到等波数间隔再做 FFT。说明为什么必须重采样，并给出 GPU 上的实现要点（查表插值、批量 FFT）。
+  \item \textbf{（计算）} $\lambda=450\,\mathrm{nm}$、工作 F 数 $N_{F,w}=5.6$ 与 $N_{F,w}=11$ 时衍射截止频率各为多少？对 $2.4\,\mu\mathrm{m}$ 像元，哪种情况下衍射成为奈奎斯特频率处的主导限制？
+  \item \textbf{（计算）} 某频率处投影 $\MTF=0.7$、材料 $0.6$、相机 $0.8$、像元 $0.9$，投影端调制度 $V_0=0.9$，平均灰度 $A=120$。估算调制幅 $M$；若 $\sigma_I=2$、四步相移，求 $\sigma_\varphi$。
+  \item \textbf{（重建场景）} 同一台设备在焦面处精度很好，在景深边缘噪声增加三倍以上，且条纹越密越明显。用 $\MTF$ 级联解释。
+  \item \textbf{（重建场景）} 牙齿轮廓边缘一圈出现漂浮点，位于牙面与背景之间。原因是什么？给出基于 $M$ 和相位梯度的剔除规则。
+  \item \textbf{（重建场景）} 换用另一颜色的投影光源后，未重新标定，平面重建出现轻微碗形。解释并给出对策。
+  \item \textbf{（设计）} 由式~\eqref{eq:ch09-tradeoff}，若 $\MTF_{\mathrm{link}}(\xi)\approx1-\xi/\xi_0$（线性近似），求使 $\delta Z$ 最小的 $\xi$。
+  \item \textbf{（诊断）} 相位误差图在某些区域条纹相位整体反转了约 $\pi$，而调制幅很低。可能是离焦 $\MTF$ 的什么现象？
+  \item \textbf{（推导）} 由均匀圆斑的 $\MTF$ 小自变量展开，求 $\MTF_{\mathrm{def}}$ 降到 $0.9$ 时 $b\xi$ 的值，并给出对应的离焦量公式。
+  \item \textbf{（计算）} 正文表中若条纹周期加长到 $0.4\,\mathrm{mm}$，$\Delta z=2\,\mathrm{mm}$ 时 $\MTF_{\mathrm{def}}$ 约为多少？代价是什么（结合第~\ref{ch:07}~章 $\delta d=P\sigma_\varphi/2\pi$）？
+  \item \textbf{（口扫场景）} 牙齿邻接面边缘，前景牙面 $M_1=M_2$，$\alpha=0.3$，$\Delta\varphi=2\,\mathrm{rad}$。求合成相位与幅值；按 $P=16$ 像素换算为多少像素的投影坐标偏差？
+  \item \textbf{（医学重建）} 内镜结构光中组织表面有一层液膜，使边缘出现强镜面高光（$M_1=10M_2$）。在 $\alpha$ 只有 $0.1$ 时，相位偏向高光一侧多少（$\Delta\varphi=1\,\mathrm{rad}$）？说明这对边缘几何的影响。
+  \item \textbf{（C++/CUDA 实践）} 设计一个检测偏置型混合像素的 GPU 后处理：给出所用判据（相位梯度、深度跳变、$M$ 局部比值），以及邻域访问如何用共享内存实现。
 \end{enumerate}
 
 \section{习题讲解}
-\label{sec:ch09-solutions}
+\label{sec:ch08-solutions}
 
 \begin{enumerate}
-  \item $\lambda/\NA^2\approx0.488/0.09\approx5.4\,\mu\mathrm{m}$；$\NA=0.1$ 时约 $49\,\mu\mathrm{m}$。$\NA$ 大层切薄、精度高，但视场与景深小，需要更长的扫描行程与时间；口内常取中等 $\NA$ 折中。
-  \item $\Delta z=0.44\times1300^2/100\,\mathrm{nm}\approx7.5\,\mu\mathrm{m}$（空气），釉质中约 $4.7\,\mu\mathrm{m}$。
-  \item $Z_{\mathrm{amb}}=c/(2F_m)=2.5\,\mathrm{m}$；$\sigma_Z=c\sigma_{\phi_m}/(4\pi F_m)\approx3\times10^8\times0.005/(4\pi\times6\times10^7)\approx2\,\mathrm{mm}$，比口内目标大约两个数量级。
-  \item 结构光需要投影与相机两个方向都能看到沟底，基线带来阴影与遮挡；共聚焦照明与观测同轴，只要一个方向能看到即可。
-  \item 多径干扰：光在两面墙之间多次反射后返回，路径更长，相位延迟偏大。与结构光中的互反射同源，都违反「每像素只接收一次直接反射」的假设。
-  \item OCT：能分辨表面以下的界面，轴向分辨率数微米。代价：量程浅、扫描慢、系统复杂，需与表面扫描配合使用。
-  \item 干涉项 $\cos(2nkz)$ 在 $k$ 上的周期为 $\pi/(nz)$。$\lambda$ 等间隔 $\delta\lambda_s$ 对应 $\delta k\approx2\pi\delta\lambda_s/\lambda_0^2$。每个周期至少两个采样：$\delta k\le\pi/(2nz)$，得 $z\le\pi/(2n\delta k)=\lambda_0^2/(4n\delta\lambda_s)$。
-  \item 空气中 $\Delta z=0.441\times1.716/0.1\approx7.6\,\mu\mathrm{m}$，组织中约 $5.5\,\mu\mathrm{m}$。比 $840\,\mathrm{nm}$/$50\,\mathrm{nm}$ 系统略差；长波长的好处是组织散射更弱、穿透更深。
-  \item $\mathrm{NA}^2=1.3\times0.45/20\approx0.029$，$\mathrm{NA}\approx0.17$。步距 $10\,\mu\mathrm{m}$，$15\,\mathrm{mm}$ 需 $1500$ 个轴向位置，远多于相移结构光的帧数，说明共聚焦方案需要高速轴向扫描与高帧率传感器。
-  \item $\Delta\phi=2\pi\times0.02\times0.3/0.3\approx0.126\,\mathrm{rad}$，$\delta\phi=\operatorname{atan2}(0.2\times0.125,1+0.2\times0.992)\approx0.021\,\mathrm{rad}$，距离误差 $3\times10^8\times0.021/(4\pi\times2\times10^7)\approx2.5\,\mathrm{cm}$。两频的距离偏差随 $\Delta L$ 与频率的关系不同（一般不相等）；若两频测得的距离在去歧义后不一致且超出噪声，就提示多径。本例数字接近，说明单凭两个频率不总能分辨，常需更多频率拟合两分量模型。
-  \item 光谱仪按 $\lambda$ 近似等间隔采样，而深度与 $k$ 成傅里叶对；不重采样直接 FFT，深层信号的频率随 $k$ 漂移（啁啾），轴向峰展宽，分辨率随深度恶化。GPU 实现：预计算每个输出 $k$ 样本对应的输入像素索引与插值权重（查找表，常量或纹理内存）；每线程算一个输出样本；对所有 A 扫描用批量 FFT（如 cuFFT 的 batched 接口）一次完成；最后取模、对数压缩。
+  \item $\xi_c=1/(\lambda N_{F,w})$：$N_{F,w}=5.6$ 时约 $397$，$N_{F,w}=11$ 时约 $202\,$周期/毫米。$2.4\,\mu\mathrm{m}$ 像元奈奎斯特约 $208\,$周期/毫米。$N_{F,w}=11$ 时截止频率已低于奈奎斯特，衍射主导。
+  \item 链路 $\MTF=0.7\times0.6\times0.8\times0.9\approx0.30$；$M\approx120\times0.9\times0.30\approx33$。$\sigma_\varphi\approx\sqrt{2/4}\times2/33\approx0.043\,\mathrm{rad}$。
+  \item 景深边缘离焦 $\MTF$ 大幅下降，投影与相机两侧同时离焦，且乘积随频率下降更快；$M$ 下降导致 $\sigma_\varphi$ 上升。条纹越密，离焦 $\MTF$ 越低，效应越强。
+  \item 混合像素：$\PSF$ 跨越深度不连续，前后景相量叠加，求出中间相位。规则：剔除 $M$ 低于阈值（如局部中值的一定比例）或相位梯度超过可能表面坡度上限的像素；或检查邻域深度跳变后剔除边缘带。
+  \item 轴向与垂轴色差：焦距与畸变系数随波长变化，标定参数不再匹配，残余畸变表现为碗形。对策：以工作波长重新标定，或使用色差校正的镜头。
+  \item $\xi\,\MTF=\xi-\xi^2/\xi_0$ 在 $\xi=\xi_0/2$ 时取最大，此时 $\delta Z$ 最小。
+  \item 离焦 $\MTF$ 过零后的负值区：对比度反转，相位翻转 $\pi$，同时幅值小。说明该区域严重离焦，应降低条纹频率或剔除。
+  \item $1-x^2/8=0.9$ 得 $x=\pi b\xi\approx0.894$，$b\xi\approx0.285$；由 $b=2\mathrm{NA}_o|\Delta z|$，$|\Delta z|\approx0.142/(\mathrm{NA}_o\xi)$。$\mathrm{NA}_o=0.03$、$\xi=5$ 时约 $0.95\,\mathrm{mm}$，与表中 $1\,\mathrm{mm}$ 一行一致。
+  \item $\xi=2.5$，$\pi b\xi=0.942$，$\MTF\approx1-0.111=0.89$（准确值约 $0.89$）。代价：$P$ 加倍，同样 $\sigma_\varphi$ 下 $\delta d$ 加倍；景深边缘处相位噪声减为约 $0.62/0.89$，综合后约 $2\times0.70=1.4$ 倍，焦面处则直接是 $2$ 倍。周期选择是景深与焦面精度的权衡。
+  \item 相量 $0.3+0.7e^{2i}=0.3+0.7(-0.416+0.909i)=0.009+0.636i$，$\tilde\varphi\approx1.56\,\mathrm{rad}$，$\tilde M\approx0.64M_1$。相对前景偏 $1.56\,\mathrm{rad}$，约 $16\times1.56/6.28\approx4$ 像素。面积占七成的背景主导了合成相位。
+  \item $0.1\times10+0.9e^{i}=1+0.486+0.757i$，$\tilde\varphi=\operatorname{atan2}(0.757,1.486)\approx0.47\,\mathrm{rad}$。背景相位为 $1\,\mathrm{rad}$，合成相位被拉向高光约 $0.53\,\mathrm{rad}$：只占一成面积的高光把相位拉过了一半。边缘轮廓会向高光一侧「外扩」，表现为组织边缘鼓起。
+  \item 判据：$|\nabla\varphi|$ 超过正常条纹梯度的若干倍；相邻深度跳变大于预设阈值；像素 $M$ 与邻域中位数之比偏离（抵消型低于 $0.5$）。实现：每个线程块把 $(16+2)\times(16+2)$ 的相位与 $M$ 瓦片载入共享内存（含一像素边框），同步后每线程计算梯度与邻域统计，标记可疑像素；被标记像素可剔除或在深度跳变两侧按最近侧填补。
 \end{enumerate}

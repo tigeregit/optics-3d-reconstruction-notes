@@ -8,7 +8,7 @@
 \begin{enumerate}
   \item 从「照明 / 投影」到「点云」的链路里，光学在哪些环节介入，哪些误差看似算法、实则来自光路与成像；
   \item 几何光学、波动光学、光度学三条线索各自管什么事，以及它们如何映射到相机内参 $K$、畸变、条纹相位 $\varphi$、信噪比 $\SNR$ 等工程量；
-  \item 本书的阅读地图（\chapref{ch:00}--\chapref{ch:10}）与每章「为什么要懂」的落点；
+  \item 本书的阅读地图（\chapref{ch:00}--\chapref{ch:11}）与每章「为什么要懂」的落点；
   \item 在医学三维重建（口内扫描、结构光、近距离立体）场景中，如何用误差预算的思路做诊断，而不是只调算法超参。
 \end{enumerate}
 
@@ -39,9 +39,9 @@
 \]
 把物距 $s$、像距 $s'$ 与焦距 $f$ 绑在一起。记号锁定：$f$ \textbf{只}表示焦距；光学频率用 $\nuopt$，不用 $f$ 表示频率。景深相关量记为 $Z_d$，避免与世界坐标深度 $Z$ 混用。畸变使直线变弯，必须在投影模型里显式出现（\chapref{ch:01}、\chapref{ch:02}）。
 
-\textbf{波动光学}关心「相位与分辨率」。干涉条纹、衍射与点扩散函数 $\PSF$（记 $h$）、调制传递函数 $\MTF$，决定「你以为很锐的边」在传感器上实际有多糊 \citep{GoodmanFourierOptics,BornWolf}。结构光的相位展开与解缠，依赖条纹可辨与相位稳定 \citep{GhigliaPritt1998}（\chapref{ch:03}、\chapref{ch:06}）。
+\textbf{波动光学}关心「相位与分辨率」。干涉条纹、衍射与点扩散函数 $\PSF$（记 $h$）、调制传递函数 $\MTF$，决定「你以为很锐的边」在传感器上实际有多糊 \citep{GoodmanFourierOptics,BornWolf}。结构光的相位展开与解缠，依赖条纹可辨与相位稳定 \citep{GhigliaPritt1998}（\chapref{ch:04}、\chapref{ch:07}）。
 
-\textbf{光度学与辐射度}关心「有多少光、灰度代表什么」。灰度 $\neq$ 辐照度 $E$；曝光、增益、gamma 与噪声模型共同决定 $\SNR$。投影机偏光片、相机偏振与部分相干，影响对比度与散斑（\chapref{ch:04}、\chapref{ch:05}）。
+\textbf{光度学与辐射度}关心「有多少光、灰度代表什么」。灰度 $\neq$ 辐照度 $E$；曝光、增益、gamma 与噪声模型共同决定 $\SNR$。投影机偏光片、相机偏振与部分相干，影响对比度与散斑（\chapref{ch:05}、\chapref{ch:06}）。
 
 \subsection{全书地图}
 
@@ -65,7 +65,7 @@
 \end{tabular}
 \end{center}
 
-阅读建议：前三章（第~\ref{ch:00}~章至 \chapref{ch:02}）建立几何与相机语言；其后波动与光度为结构光与立体做准备；\chapref{ch:10} 把各章误差收成一张预算图。
+阅读建议：前四章（第~\ref{ch:00}~章至 \chapref{ch:03}）建立几何、相机与标定语言；其后波动与光度为结构光与立体做准备；\chapref{ch:11} 把各章误差收成一张预算图。
 
 \subsection{误差预算的直觉}
 
@@ -93,7 +93,7 @@ $g$ 的具体形式随方法而变，但诊断顺序应固定：先问光路与�
 \begin{enumerate}
   \item \textbf{可重复的系统偏差}（整弓弯曲、尺度随工作距漂）→ 先查 $K$、畸变、对焦是否锁定、窗口玻璃与温度；
   \item \textbf{随纹理/条纹质量变的随机散} → 查离焦、$Z_d$、曝光与 $\SNR$、偏振与反光；
-  \item \textbf{仅在遮挡边缘或高曲率处坏} → 查 $\MTF$、部分像元混合、三角测量几何放大（\chapref{ch:07}、\chapref{ch:08}）。
+  \item \textbf{仅在遮挡边缘或高曲率处坏} → 查 $\MTF$、部分像元混合、三角测量几何放大（\chapref{ch:08}、\chapref{ch:09}）。
 \end{enumerate}
 光学并不能替代数值算法，但能告诉你\textbf{算法不该被要求去拟合的物理欠缺}。把欠缺写进误差预算，比在损失里加一项盲目平滑更可控。
 
@@ -115,14 +115,14 @@ $g$ 的具体形式随方法而变，但诊断顺序应固定：先问光路与�
 \textbf{设定。} 口内结构光，工作距 $Z=15\,\mathrm{mm}$，基线 $B=8\,\mathrm{mm}$，像素焦距 $f_x=1500$ 像素，像面条纹周期 $P=16$ 像素，四步相移（$N=4$）。某像素在一帧内平均收集 $A=5000$ 个光电子，条纹调制幅 $M=2500$ 个电子，即调制度 $V=M/A=0.5$；读出噪声 $5$ 个电子。
 
 \begin{enumerate}
-  \item \textbf{灰度噪声}（第~\ref{ch:05}~章）：光子散粒噪声 $\sqrt{A}\approx71$ 个电子，与读出噪声平方和 $\sqrt{71^2+5^2}\approx71$，记 $\sigma_I\approx71$ 电子。读出噪声在亮场可以忽略。
-  \item \textbf{相位噪声}（第~\ref{ch:06}~章式~\eqref{eq:ch06-phase-noise}）：$\sigma_\varphi\approx\sqrt{2/4}\times71/2500\approx0.020\,\mathrm{rad}$。
-  \item \textbf{视差噪声}（第~\ref{ch:07}~章）：一个条纹周期对应 $2\pi$，故 $\delta d=P\sigma_\varphi/(2\pi)=16\times0.020/6.28\approx0.051$ 像素。
-  \item \textbf{深度噪声}（第~\ref{ch:07}~章式~\eqref{eq:ch07-error}）：
+  \item \textbf{灰度噪声}（第~\ref{ch:06}~章）：光子散粒噪声 $\sqrt{A}\approx71$ 个电子，与读出噪声平方和 $\sqrt{71^2+5^2}\approx71$，记 $\sigma_I\approx71$ 电子。读出噪声在亮场可以忽略。
+  \item \textbf{相位噪声}（第~\ref{ch:07}~章式~\eqref{eq:ch07-phase-noise}）：$\sigma_\varphi\approx\sqrt{2/4}\times71/2500\approx0.020\,\mathrm{rad}$。
+  \item \textbf{视差噪声}（第~\ref{ch:08}~章）：一个条纹周期对应 $2\pi$，故 $\delta d=P\sigma_\varphi/(2\pi)=16\times0.020/6.28\approx0.051$ 像素。
+  \item \textbf{深度噪声}（第~\ref{ch:08}~章式~\eqref{eq:ch08-error}）：
   \[\delta Z=\frac{Z^2\,\delta d}{Bf_x}=\frac{225\times0.051}{12000}\,\mathrm{mm}\approx0.96\,\mu\mathrm{m}.\]
 \end{enumerate}
 
-这个不到 $1\,\mu\mathrm{m}$ 的结果是\emph{理想随机项}。它成立需要三个前提：调制度确实有 $0.5$（物体在景深内、无强环境光、无严重次表面散射）；噪声只有散粒和读出两项（无饱和、无曝光漂移）；标定无偏。任一前提破坏，误差会以系统项的形式出现，而且常常比这个数大一个数量级（第~\ref{ch:10}~章的预算表）。走查的用处正在于此：先知道「物理上最好能有多好」，再把实测误差与之对比，差出来的部分就是要找的系统项。
+这个不到 $1\,\mu\mathrm{m}$ 的结果是\emph{理想随机项}。它成立需要三个前提：调制度确实有 $0.5$（物体在景深内、无强环境光、无严重次表面散射）；噪声只有散粒和读出两项（无饱和、无曝光漂移）；标定无偏。任一前提破坏，误差会以系统项的形式出现，而且常常比这个数大一个数量级（第~\ref{ch:11}~章的预算表）。走查的用处正在于此：先知道「物理上最好能有多好」，再把实测误差与之对比，差出来的部分就是要找的系统项。
 
 \subsection{量纲检查：三种单位不能混}
 
@@ -150,7 +150,7 @@ $g$ 的具体形式随方法而变，但诊断顺序应固定：先问光路与�
 以近距离医学结构光三维重建为例（口内扫描仪一类系统）：
 \begin{enumerate}
   \item \textbf{工作距短、景深窄}：牙面起伏大时，离焦使条纹对比度下降，$\PSF$ 展宽直接抬高相位噪声；此时应查 $Z_d$ 与光圈，而不是只加大平滑。
-  \item \textbf{湿润高反与次表面散射}：光度模型偏离朗伯，$E$ 与灰度非线性；偏振与波长选择影响有效对比度（后文 \chapref{ch:04}、\chapref{ch:05}）。
+  \item \textbf{湿润高反与次表面散射}：光度模型偏离朗伯，$E$ 与灰度非线性；偏振与波长选择影响有效对比度（后文 \chapref{ch:05}、\chapref{ch:06}）。
   \item \textbf{手持运动与标定}：外参 $R,t$ 与内参 $K$ 的微小误差经三角测量放大；先区分「标定漂移」与「算法阈值」。
   \item \textbf{检查清单起手式}：点云局部糊或系统性弯——先看畸变与 $K$；条纹区噪声大——先看离焦与 $\SNR$；深度跳变在边缘——先看 $\MTF$ 与遮挡。
 \end{enumerate}
@@ -183,7 +183,7 @@ $g$ 的具体形式随方法而变，但诊断顺序应固定：先问光路与�
   \item 示例：投影光学（条纹对比度低→相位噪）；镜头畸变（直线牙弓被弯）；离焦/$\PSF$（边缘点云糊）；传感器噪声/$\SNR$（深度抖动）；标定中 $K,R,t$（全局尺度或弯曲）。任选四点并对应表现即可。
   \item 优先离焦/景深：沟窝相对对焦面更远，$Z_d$ 不够则条纹 MTF 下降。顺序建议：(1) 查对焦面与工作距是否落在声称景深内；(2) 看原图条纹对比度是否随深度变差；(3) 再查是否运动模糊或匹配参数过平滑。窗口过大通常造成过平滑而非「仅沟窝发散」。
   \item 否。提高模拟增益或延长曝光可使灰度饱和，而场景 $E$ 未变；或 tonemap/gamma 改变灰度。灰度是相机响应后的数字量。
-  \item 缺少干涉/衍射/分辨率与条纹可辨的限度，对应 \chapref{ch:03}（及 \chapref{ch:06} 的相位实践）。
+  \item 缺少干涉/衍射/分辨率与条纹可辨的限度，对应 \chapref{ch:04}（及 \chapref{ch:07} 的相位实践）。
   \item $\SNR$ 加倍则 $\delta Z$ 减半。不能代替标定：系统偏差（错误的 $K$ 或畸变）不随 $\SNR$ 消失；$\SNR$ 主要压随机误差。
   \item $\sigma_I$ 仍约 $71$ 电子；$\sigma_\varphi=0.707\times71/500\approx0.10\,\mathrm{rad}$；$\delta d=16\times0.10/6.28\approx0.26$ 像素；$\delta Z=225\times0.26/12000\,\mathrm{mm}\approx4.8\,\mu\mathrm{m}$。变化发生在相位一步：$M$ 降为五分之一，后续各步线性传递。
   \item $V=2500/15000\approx0.17$。$\sigma_I\approx\sqrt{15000}\approx122$ 电子，$\sigma_\varphi=0.707\times122/2500\approx0.035\,\mathrm{rad}$，$\delta d\approx0.088$ 像素，$\delta Z\approx1.7\,\mu\mathrm{m}$。环境光不增加调制，只增加噪声；若它还导致饱和，后果更严重。
