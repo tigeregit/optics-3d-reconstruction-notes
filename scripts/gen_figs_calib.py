@@ -56,7 +56,7 @@ def fig_reproj_bowl():
     ax.set_ylabel(r"畸变 $k_1$（示意坐标）", fontsize=12)
     ax.set_title("重投影代价的碗形与狭长谷（可观性示意）", fontsize=13)
     ax.legend(loc="upper right", fontsize=10)
-    fig.colorbar(cs, ax=ax, fraction=0.046, pad=0.04, label=r"$E=\sum\|e\|^2$")
+    fig.colorbar(cs, ax=ax, fraction=0.046, pad=0.04, label=r"$C=\sum\|e\|^2$")
     fig.text(0.5, 0.01, NOTE, ha="center", fontsize=9, color="#888")
     fig.savefig(OUT / "fig-reproj-bowl.pdf", bbox_inches="tight"); plt.close(fig)
 
@@ -87,11 +87,25 @@ def fig_handeye():
         ax.text((x1 + x2) / 2, (y1 + y2) / 2 + 0.18, text, ha="center", fontsize=11, color=color)
 
     arrow(2.8, 2.3, 3.4, 2.85, r"$X_{\mathrm{he}}$", "#6A1B9A")
-    arrow(4.2, 2.55, 5.5, 2.0, r"$A_i$（眼→板）", "#1565C0")
-    arrow(1.7, 1.6, 5.5, 1.4, r"$B_i$（手→板架）", "#455A64")
-    ax.text(3.6, 4.25, r"手眼：$A_i X_{\mathrm{he}} = X_{\mathrm{he}} B_i$（多姿态求 $X_{\mathrm{he}}$）",
+    # Relative motions A_i (eye), B_i (hand) for one motion segment
+    # Draw two poses of probe+camera as dashed ghosts, arrows for relative A_i, B_i
+    ax.add_patch(FancyBboxPatch((0.35, 0.55), 1.5, 0.85, boxstyle="round,pad=0.03",
+                                fc="#FAFAFA", ec="#90A4AE", lw=1.0, linestyle="--"))
+    ax.text(1.1, 0.97, "手$_{i}$", ha="center", va="center", fontsize=10, color="#607D8B")
+    ax.add_patch(FancyBboxPatch((2.55, 0.85), 1.1, 0.65, boxstyle="round,pad=0.03",
+                                fc="#E8F5E9", ec="#81C784", lw=1.0, linestyle="--"))
+    ax.text(3.1, 1.17, "眼$_{i}$", ha="center", va="center", fontsize=10, color="#2E7D32")
+    # B_i: hand_i -> hand_{i+1}
+    ax.annotate("", xy=(1.5, 1.6), xytext=(1.1, 1.4),
+                arrowprops=dict(arrowstyle="->", lw=1.6, color="#455A64"))
+    ax.text(0.55, 1.55, r"$B_i$（手相对）", fontsize=11, color="#455A64")
+    # A_i: eye_i -> eye_{i+1}
+    ax.annotate("", xy=(3.5, 2.55), xytext=(3.1, 1.5),
+                arrowprops=dict(arrowstyle="->", lw=1.6, color="#1565C0"))
+    ax.text(3.7, 1.85, r"$A_i$（眼相对）", fontsize=11, color="#1565C0")
+    ax.text(3.6, 4.25, r"手眼：$A_i X_{\mathrm{he}} = X_{\mathrm{he}} B_i$（相对运动，$A_i,B_i$ 同段）",
             ha="center", fontsize=13)
-    ax.text(3.6, 3.85, "口扫：探头位姿变化时，相机相对探头的固定刚体即手眼变换",
+    ax.text(3.6, 3.85, r"口扫：多段相对运动求固定手眼变换 $X_{\mathrm{he}}$",
             ha="center", fontsize=11, color="#444")
     fig.text(0.5, 0.02, NOTE, ha="center", fontsize=9, color="#888")
     fig.savefig(OUT / "fig-handeye.pdf", bbox_inches="tight"); plt.close(fig)

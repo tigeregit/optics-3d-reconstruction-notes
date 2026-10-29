@@ -64,14 +64,14 @@
 \subsection{数学一：重投影 LS $\to$ GN $\to$ LM $\to$ 小规模 BA}
 \label{sec:ch03-ba}
 
-记号与第~\ref{ch:02}~章一致：世界点 $\boldsymbol X$，外参 $R,t$，归一化坐标经畸变后乘 $K$ 得像素。观测像素 $\boldsymbol u^{\mathrm{obs}}=(u,v)^\top$。重投影残差（锁表：$e$）
+记号与第~\ref{ch:02}~章一致：世界点 $\boldsymbol X$，外参 $R,t$，归一化坐标经畸变后乘 $K$ 得像素。观测像素 $\boldsymbol u^{\mathrm{obs}}=(u,v)^\top$。重投影残差（全书记号：$e$）
 \begin{equation}
   \boldsymbol e = \boldsymbol u^{\mathrm{obs}} - \pi(K,\,k_{\mathrm{dist}},\,R,\,t,\,\boldsymbol X)\in\mathbb{R}^2,
   \label{eq:ch03-residual}
 \end{equation}
-其中 $\pi$ 表示「刚体变换 $\to$ 投影 $\to$ 畸变 $\to$ 像素」的合成。标定量是参数向量 $\boldsymbol\theta$（内参、畸变、各帧外参、必要时三维点），代价
+其中 $\pi$ 表示「刚体变换 $\to$ 投影 $\to$ 畸变 $\to$ 像素」的合成。标定量是参数向量 $\boldsymbol\theta$（内参、畸变、各帧外参、必要时三维点），代价（记 $C$，以免与本质矩阵 $E$、辐照度混淆）
 \begin{equation}
-  E(\boldsymbol\theta)=\frac12\sum_{i,j}\|\boldsymbol e_{ij}(\boldsymbol\theta)\|^2.
+  C(\boldsymbol\theta)=\frac12\sum_{i,j}\|\boldsymbol e_{ij}(\boldsymbol\theta)\|^2.
   \label{eq:ch03-cost}
 \end{equation}
 
@@ -89,68 +89,64 @@
   \bigl(J^\top J+\mu I\bigr)\delta = -J^\top\boldsymbol e_0,
   \label{eq:ch03-lm}
 \end{equation}
-$\mu>0$ 为阻尼（锁表）。$\mu$ 大时步子像梯度下降，稳；$\mu$ 小时回到 GN，快。实操：若 $E$ 下降则减小 $\mu$，否则增大 $\mu$ 重试。OpenCV、Ceres、g2o 的标定后端本质上都是带稀疏结构的 LM。
+$\mu>0$ 为阻尼（全书记号）。$\mu$ 大时步子像梯度下降，稳；$\mu$ 小时回到 GN，快。实操：若代价 $C$ 下降则减小 $\mu$，否则增大 $\mu$ 重试。OpenCV、Ceres、g2o 的标定后端本质上都是带稀疏结构的 LM。
 
 \textbf{Bundle Adjustment（BA）。} 把多帧外参与（可选）三维点、内参放进同一个 $\boldsymbol\theta$，残差仍是式~\eqref{eq:ch03-residual}，用 LM 解式~\eqref{eq:ch03-lm}。稀疏性来自：每个残差只依赖「这一帧的位姿 + 这个点 + 共享内参」。标定 BA 与重建 BA 同一套残差，差别只在哪些量固定、哪些量自由。
 
-\subsubsection{数值例：两参数、四残差的一步 LM}
+\subsubsection{数值例：两参数、两残差的一步 LM}
 \label{sec:ch03-numeric}
 
-设定（数量级示意，专供手算）：针孔无畸变，$f_x=f_y=100$ 像素，$c_x=c_y=0$。世界系中两点 $\boldsymbol X_1=(0,0,1)^\top$、$\boldsymbol X_2=(0.2,0,1)^\top$（单位：任意一致长度）。相机 $R=I$，未知平移只有水平分量：$\boldsymbol t=(t_x,0,0)^\top$。真值 $t_x^\star=0.10$。
+设定（数量级示意，专供手算）：针孔无畸变，$f_x=f_y=100$ 像素，$c_x=c_y=0$。世界系中两点 $\boldsymbol X_1=(0,0,1)^\top$、$\boldsymbol X_2=(0.2,0,1)^\top$（单位：任意一致长度）。相机 $R=I$，未知平移只有水平分量 $\boldsymbol t=(t_x,0,0)^\top$，真值 $t_x^\star=0.10$。第二参数取板沿光轴的小偏移 $\alpha_Z$（即把深度写成 $Z=1+\alpha_Z$，真值 $\alpha_Z^\star=0$），以演示与 $t_x$ 的耦合；\textbf{不用}齐次尺度符号 $s$。
 
-投影：$u=f_x(X+t_x)/Z$，$v=f_y Y/Z$。对上述两点，$v\equiv0$，于是只保留 $u$ 残差，并补两个「假想」的竖直观测，使残差维数为 4、参数维数为 2——第二参数取板沿光轴的小偏移 $s$（即把 $Z=1+s$ 当作待估，真值 $s^\star=0$），以演示耦合。
+投影：$u=f_x(X+t_x)/Z$。两点的 $Y=0$，故 $v$ 恒为 $0$，对 $(t_x,\alpha_Z)$ 的雅可比行全零——它们不进入法方程，本例只保留两个水平残差（两参数、两观测）。
 
-观测（含噪声）：
+观测（含噪声）：$u_1^{\mathrm{obs}}=10.4$，$u_2^{\mathrm{obs}}=30.1$。
+模型：$u_1=100\,t_x/(1+\alpha_Z)$，$u_2=100(0.2+t_x)/(1+\alpha_Z)$。
+初值 $\boldsymbol\theta_0=(t_x,\alpha_Z)^\top=(0.08,0.05)^\top$。
+
+在 $\boldsymbol\theta_0$ 处预测 $\hat u_1=7.619$、$\hat u_2=26.667$，残差
 \[
-  u_1^{\mathrm{obs}}=10.4,\quad u_2^{\mathrm{obs}}=30.1,\quad
-  v_1^{\mathrm{obs}}=0.2,\quad v_2^{\mathrm{obs}}=-0.1.
+  \boldsymbol e
+  =\begin{pmatrix}10.4-7.619\\ 30.1-26.667\end{pmatrix}
+  =\begin{pmatrix}2.781\\ 3.433\end{pmatrix},\qquad
+  C(\boldsymbol\theta_0)=\frac12\|\boldsymbol e\|^2\approx 9.786.
 \]
-模型：$u_1=100\,t_x/(1+s)$，$u_2=100(0.2+t_x)/(1+s)$，$v_1=v_2=0$（理想）。初值 $\boldsymbol\theta_0=(t_x,s)^\top=(0.08,0.05)^\top$。
-
-在 $\boldsymbol\theta_0$ 处：
-\[
-  u_1=7.619,\ u_2=26.667,\quad
-  \boldsymbol e=\begin{pmatrix}10.4-7.619\\0.2-0\\30.1-26.667\\-0.1-0\end{pmatrix}
-  =\begin{pmatrix}2.781\\0.200\\3.433\\-0.100\end{pmatrix}.
-\]
-雅可比（行序同残差，列序 $(t_x,s)$）：
+按定义 $J=\partial\boldsymbol e/\partial\boldsymbol\theta=-\partial\hat{\boldsymbol u}/\partial\boldsymbol\theta$（残差 $=$ 观测减预测，故雅可比带负号）。符号形式
 \[
   J=\begin{pmatrix}
-  100/(1+s) & -100 t_x/(1+s)^2\\
-  0 & 0\\
-  100/(1+s) & -100(0.2+t_x)/(1+s)^2\\
-  0 & 0
-  \end{pmatrix}
-  =\begin{pmatrix}
-  95.238 & -7.256\\
-  0 & 0\\
-  95.238 & -25.397\\
-  0 & 0
-  \end{pmatrix}.
+  -100/(1+\alpha_Z) & \;100\,t_x/(1+\alpha_Z)^2\\
+  -100/(1+\alpha_Z) & \;100(0.2+t_x)/(1+\alpha_Z)^2
+  \end{pmatrix},
+\]
+代入 $\boldsymbol\theta_0$ 得数值
+\[
+  J=\begin{pmatrix}-95.238 & +7.256\\ -95.238 & +25.397\end{pmatrix}.
 \]
 于是
+\begin{align*}
+  J^\top J&=\begin{pmatrix}18140.6 & -3109.3\\ -3109.3 & 697.7\end{pmatrix},\\
+  J^\top\boldsymbol e&=\begin{pmatrix}-591.8\\ +107.4\end{pmatrix}.
+\end{align*}
+取 $\mu=10$，解式~\eqref{eq:ch03-lm}：$(J^\top J+\mu I)\delta=-J^\top\boldsymbol e$，得
 \[
-  J^\top J=\begin{pmatrix}18140.6 & -3109.3\\ -3109.3 & 697.7\end{pmatrix},\quad
-  J^\top\boldsymbol e=\begin{pmatrix}591.8\\ -107.3\end{pmatrix}.
-\]
-取 $\mu=10$，解 $(J^\top J+\mu I)\delta=-J^\top\boldsymbol e$，得
-\[
-  \delta\approx\begin{pmatrix}-0.020\\ +0.048\end{pmatrix}
+  \delta\approx\begin{pmatrix}+0.0268\\ -0.0342\end{pmatrix}
   \Rightarrow
-  \boldsymbol\theta_1\approx\begin{pmatrix}0.060\\ 0.098\end{pmatrix}.
+  \boldsymbol\theta_1\approx\begin{pmatrix}0.1068\\ 0.0158\end{pmatrix}.
 \]
-（真值 $(0.10,0)$；一步不会到，但 $E$ 应从初值下降。习题要求你把 $\mu=0$ 的 GN 步与 $\mu=10$ 的 LM 步对比，并再迭代一次。）
+更新后 $\hat u_1\approx10.509$、$\hat u_2\approx30.197$，
+$\boldsymbol e_1\approx(-0.109,\,-0.097)^\top$，
+$C(\boldsymbol\theta_1)\approx0.036$（由 $9.786$ 下降）。真值 $(0.10,0)$；一步未到，但方向正确。习题要求对比 $\mu=0$ 的 GN 步与再迭代一次。
 
-\textbf{读数。} $J^\top J$ 的条件数已经很大：$s$ 与 $t_x$ 通过「整体缩放」耦合——这正是「等距平行拍摄时焦距与深度纠缠」的微型版。LM 的 $\mu I$ 把最小特征值抬起来，避免一步跳出。
+\textbf{读数。} $J^\top J$ 的条件数已经很大：$\alpha_Z$ 与 $t_x$ 通过「整体缩放」耦合——这正是「等距平行拍摄时焦距与深度纠缠」的微型版。LM 的 $\mu I$ 把最小特征值抬起来，避免一步跳出。
 
-\subsection{数学二：齐次、单应、$E\cdot F$ 到立体外参}
+\subsection{数学二：齐次、单应、$E$/$F$ 到立体外参}
 \label{sec:ch03-homography}
 
-\textbf{齐次。} 像素 $(u,v,1)^\top\sim K[R|t]\boldsymbol X^{\mathrm{h}}$。$\sim$ 表示差一个尺度 $s$（锁表）。三角测量与标定都在这个等价类上运算。
+\textbf{齐次。} 像素 $(u,v,1)^\top\sim K[R|t]\boldsymbol X^{\mathrm{h}}$。$\sim$ 表示差一个齐次尺度因子 $s$（全书记号）。三角测量与标定都在这个等价类上运算。
 
 \textbf{单应 $H$。} 若 $\boldsymbol X$ 落在平面上，存在 $3\times3$ 矩阵 $H$ 使 $\boldsymbol u^{\mathrm{h}}\sim H\boldsymbol X_{\mathrm{plane}}^{\mathrm{h}}$。平面靶每幅图像估一个 $H_i$；Zhang 法的线性步把 $\boldsymbol h_i$ 与 $K^{-\top}K^{-1}$ 的约束联立，解出 $K$ 初值 \citep{Zhang2000Calibration}。光学出口：$H$ 本身不是内参，但\textbf{多幅 $H$ 的一致性}才给出 $K$。
 
-\textbf{本质矩阵 $E$ 与基础矩阵 $F$。} 对已标定双目，$\boldsymbol x_2^\top E\boldsymbol x_1=0$，其中 $\boldsymbol x=K^{-1}\boldsymbol u^{\mathrm{h}}$ 为归一化坐标，$E=[t]_\times R$。未标定像素域写 $\boldsymbol u_2^{\mathrm{h}\top} F\boldsymbol u_1^{\mathrm{h}}=0$，$F=K_2^{-\top}EK_1^{-1}$ \citep{HartleyZisserman2004}。八点法（或更稳的归一化八点）给出线性初值；再分解 $E$ 得四候选 $(R,t)$，用螯合点在相机前方的测试选一。
+\textbf{本质矩阵 $E$ 与基础矩阵 $F$。} 对已标定双目，$\boldsymbol x_2^\top E\boldsymbol x_1=0$，其中 $\boldsymbol x=K^{-1}\boldsymbol u^{\mathrm{h}}$ 为归一化坐标，$E=[t]_\times R$。未标定像素域写 $\boldsymbol u_2^{\mathrm{h}\top} F\boldsymbol u_1^{\mathrm{h}}=0$，$F=K_2^{-\top}EK_1^{-1}$ \citep{HartleyZisserman2004}。八点法（或更稳的归一化八点）给出线性初值；再分解 $E$ 得四候选 $(R,t)$，用手性检验（cheirality：重建点须落在两相机前方）在四候选中选一。
 
 \textbf{本章用到为止。} 需要你能：(i) 从对应点建 $F$/$E$ 并分解出相对 $R,t$；(ii) 明白尺度：$E$ 只能决定 $t$ 的方向，基线长度 $\|t\|=B$ 要靠已知长度（标定板格距）恢复。不在此展开多视张量或代数簇。
 
@@ -203,12 +199,12 @@ $\mu>0$ 为阻尼（锁表）。$\mu$ 大时步子像梯度下降，稳；$\mu$ 
 
 \subsection{手眼 / 探头标定}
 
-口扫探头上，相机固连在探头壳体上；跟踪系统或拼接前端给出探头位姿。需要的是相机相对探头的固定刚体 $X_{\mathrm{he}}$（锁表：手眼 $X$，正文写 $X_{\mathrm{he}}$），见图~\ref{fig:ch03-handeye}。
+口扫探头上，相机固连在探头壳体上；跟踪系统或拼接前端给出探头位姿。需要的是相机相对探头的固定刚体 $X_{\mathrm{he}}$（全书记号：手眼变换写作 $X_{\mathrm{he}}$，以别于世界点 $\boldsymbol X$），见图~\ref{fig:ch03-handeye}。
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.88\textwidth]{fig-handeye.pdf}
-  \caption{口扫探头手眼几何。$A_i$ 为第 $i$ 次测量时「眼（相机）到标定板」的刚体；$B_i$ 为「手（探头）到板架」的刚体；$X_{\mathrm{he}}$ 为待求的手眼变换。}
+  \caption{口扫探头手眼几何。$A_i$ 是第 $i$ 段运动中相机（眼）的相对刚体；$B_i$ 是同一段运动中探头（手）的相对刚体；$X_{\mathrm{he}}$ 为待求的固定手眼变换，满足 $A_i X_{\mathrm{he}}=X_{\mathrm{he}} B_i$。}
   \label{fig:ch03-handeye}
 \end{figure}
 
@@ -217,7 +213,7 @@ $\mu>0$ 为阻尼（锁表）。$\mu$ 大时步子像梯度下降，稳；$\mu$ 
   A_i X_{\mathrm{he}} = X_{\mathrm{he}} B_i,
   \label{eq:ch03-handeye}
 \end{equation}
-其中 $A_i$ 是相机系下两次姿态之间的相对运动（由看固定标定板得到），$B_i$ 是探头跟踪器测到的相对运动。旋转部分可先独立求解，再解平移；Park--Martin 在欧氏群上给出稳定形式。
+其中 $A_i$、$B_i$ 都是\emph{相对运动}：设第 $i$ 段前后两时刻相机到固定标定板的位姿为 $T_{\mathrm{cam},i}$、$T_{\mathrm{cam},i+1}$，则 $A_i=T_{\mathrm{cam},i+1}T_{\mathrm{cam},i}^{-1}$；探头跟踪器给出的对应相对运动为 $B_i$。（图~\ref{fig:ch03-handeye} 中箭头标的是同一段相对运动，不是「眼到板」的绝对位姿。）旋转部分可先独立求解，再解平移；Park--Martin 在欧氏群上给出稳定形式。
 
 \textbf{口扫实操要点。}
 \begin{itemize}
@@ -277,7 +273,7 @@ $\mu>0$ 为阻尼（锁表）。$\mu$ 大时步子像梯度下降，稳；$\mu$ 
 
 \begin{enumerate}
   \item \textbf{（症状）} 平面扫描呈碗形，重投影 RMS $=0.08$~px 且残差随半径增大。下一步应改采集还是改模型？为什么？
-  \item \textbf{（手算 BA）} 在第~\ref{sec:ch03-numeric}~节的设定下，用 $\mu=0$ 算一步 GN，与正文 $\mu=10$ 的 $\delta$ 比较；并计算更新前后 $E=\frac12\|\boldsymbol e\|^2$。
+  \item \textbf{（手算 BA）} 在第~\ref{sec:ch03-numeric}~节的设定下，用 $\mu=0$ 算一步 GN，与正文 $\mu=10$ 的 $\delta$ 比较；并计算更新前后代价 $C=\frac12\|\boldsymbol e\|^2$。
   \item \textbf{（单应）} 说明为什么「单幅平面图像的单应」不能唯一决定 $K$，而「多幅不同姿态的单应」可以。
   \item \textbf{（双目）} 左右分别标定后相对 $R,t$ 用算术平均合并。举一种该平均会失败的姿态集合，并写出联合精炼的残差应包含哪两项。
   \item \textbf{（倒装投影）} 相位在高光区跳变 $0.2\,\mathrm{rad}$，条纹周期对应 $12$ 像素。投影仪坐标误差约多少像素？它会进入哪类参数？
@@ -290,7 +286,7 @@ $\mu>0$ 为阻尼（锁表）。$\mu$ 大时步子像梯度下降，稳；$\mu$ 
 
 \begin{enumerate}
   \item 残差随半径增大，指向畸变模型不足或边缘姿态缺失。先加边缘清晰姿态并提高畸变阶数再 LM；若已覆盖边缘仍呈径向系统残差，再查主点与畸变约定（像素域/归一化域）。只降 RMS 阈值而不看空间分布会漏掉碗形。
-  \item $\mu=0$ 时直接解 $J^\top J\,\delta=-J^\top\boldsymbol e$。因 $J^\top J$ 条件数大，$\delta$ 的 $s$ 分量往往比 LM 步大，可能使 $E$ 上升。数值上应得到与正文不同的 $\delta$，并验证 LM 步后 $E$ 下降、GN 步可能上升或震荡——这正是阻尼的意义。
+  \item $\mu=0$ 时直接解 $J^\top J\,\delta=-J^\top\boldsymbol e$，得 $\delta_{\mathrm{GN}}\approx(+0.0265,-0.0360)$，与 LM 步接近；本例中 GN 亦使 $C$ 下降。若初值更差或条件数更大，GN 步可能使 $C$ 上升而 LM 仍下降——这正是阻尼的意义。注意雅可比必须取 $J=\partial\boldsymbol e/\partial\boldsymbol\theta$（带负号），否则更新方向反号、$C$ 会上升。
   \item 单幅 $H$ 含 $8$ 自由度（差一个尺度），而 $K$ 与该幅外参自由度之和更大，存在一簇解共享同一 $H$。多幅 $H_i$ 共享同一 $K$，Zhang 的约束才把 $K$ 从外参里分开。
   \item 若多数姿态近乎共面运动或相对视差几乎不变，各帧估出的相对 $t$ 方向噪声很大，算术平均不消偏。联合残差应含：左重投影 + 右重投影（共享相对 $R,t$ 与各自 $K$）；可选加极线项 $\boldsymbol u_R^\top F\boldsymbol u_L$。
   \item $\delta u_p\approx 12\times0.2/(2\pi)\approx0.38$ 像素。进入投影仪内参/畸变或相对外参（以及派生的光平面法向），表现为系统几何误差，不是随机相位噪声。
